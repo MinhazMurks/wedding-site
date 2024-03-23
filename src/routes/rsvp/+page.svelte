@@ -1,4 +1,5 @@
 <script lang="ts">
+
 	enum InputType {
 		INSERT = 'insertText',
 		INSERT_FROM_PASTE = 'insertFromPaste',
@@ -6,11 +7,22 @@
 		DELETE_FORWARD = 'deleteContentForward',
 	}
 
-	const weddingServiceHost = 
+	type GetRsvpResponse = {
+		firstName: string,
+		lastName: string,
+		plusOneEnabled: boolean
+	}
+	
+	type ErrorResponse = {
+		message: string,
+	}
+
+	const weddingServiceHost = "localhost:8080"
 
 	const usNumberFormat = [2, 5];
 
 	let retrieved = false;
+	let loading = false;
 
 	let firstName = '';
 	let lastName = '';
@@ -23,18 +35,63 @@
 	let beefSelected = false;
 	let fishSelected = false;
 
+	let plusOneEnabled = false;
+	let plusOneSelected = false;
+
+	let errorMessage: string = null;
+
+	function getRsvp() {
+		loading = true;
+		fetch(`http://${weddingServiceHost}/api/v1/rsvp?` + new URLSearchParams({
+			firstName: firstName,
+			lastName: lastName,
+		}), {
+			method: 'GET',
+			headers: {
+				"Content-Type": "application/json",
+			}
+		})
+			.then(async response => {
+				if (response.status >= 500) {
+					throw new Error("Something went wrong");
+				}
+				else if (response.status >= 400) {
+					const errorResponse = await response.json() as never as ErrorResponse;
+					console.log(response);
+					throw new Error(errorResponse.message)
+				}
+				return response.json();
+			})
+			.then(data => {
+				data = data as GetRsvpResponse;
+
+				firstName = data.firstName;
+				lastName = data.lastName;
+				plusOneEnabled = data.plusOneEnabled;
+
+				loading = false;
+				retrieved = true;
+			})
+			.catch(error =>
+			{
+				console.log("CAUGHT HERE " + error.message);
+				loading = false;
+				errorMessage = error.message;
+			});
+	}
+
 	function submit() {
 		console.log('Submitting...');
 	}
 
-	function other() {
-		console.log('Other...');
-		retrieved = true;
-	}
-
-	function changeInput(event: Event) {
+	function validateFirstName(event: Event) {
 		let inputEvent = event as InputEvent;
 		firstName = inputEvent.target.value;
+	}
+
+	function validateLastName(event: Event) {
+		let inputEvent = event as InputEvent;
+		lastName = inputEvent.target.value;
 	}
 
 	function validateEmail(event: Event) {
@@ -102,23 +159,30 @@
 </script>
 
 <section>
-	<div class="form-container">
+	<div class="form-container" class:loading>
+
+		{#if loading}
+			<div class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+		{/if}
+
 		<h1>RSVP</h1>
 		<form class="form-fields" on:submit={submit}>
 			<input
 				class="input-field"
 				type="text"
 				name="firstName"
-				placeholder="firstName"
+				placeholder="First Name"
 				bind:value={firstName}
-				on:input={e => changeInput(e)}
+				on:input={e => validateFirstName(e)}
 				required
 			/>
 			<input
 				class="input-field"
 				type="text"
 				name="lastName"
-				placeholder="lastName"
+				placeholder="Last Name"
+				bind:value={lastName}
+				on:input={e => validateLastName(e)}
 				required
 			/>
 
@@ -128,6 +192,7 @@
 					type="email"
 					name="email"
 					placeholder="email"
+					bind:value={email}
 					on:change={e => validateEmail(e)}
 					required
 				/>
@@ -177,8 +242,13 @@
 				</div>
 				<input class="submit-button" type="submit" name="submit" value="Submit">
 			{:else}
-				<input class="submit-button" type="button" on:click={other} name="submit" value="Find Invitation">
+				<input class="submit-button" type="button" on:click={getRsvp} name="submit" value="Find Invitation">
 			{/if}
+
+			{#if errorMessage}
+				<div class="error-message">{errorMessage}</div>
+			{/if}
+
 		</form>
 	</div>
 </section>
@@ -192,10 +262,16 @@
     }
 
     h1 {
-        font-size: 8rem;
+        font-size: max(8vw, 10vh);
         margin-top: 2rem;
         margin-bottom: 2rem;
     }
+
+		.loading {
+				opacity: 0.8;
+				cursor: default;
+				pointer-events: none;
+		}
 
     .input-field {
         border: none;
@@ -241,4 +317,105 @@
         background: #cdcdcd;
         padding: 10px;
     }
+
+		.error-message {
+				background: #bf3737;
+				color: white;
+				border-radius: 5px;
+				margin: 10px;
+				padding-top: 10px;
+				padding-bottom: 10px;
+				padding-left: 50px;
+				padding-right: 50px;
+
+        box-shadow: 0px 0px 50px -8px rgba(0,0,0,0.75);
+        -webkit-box-shadow: 0px 0px 50px -8px rgba(0,0,0,0.75);
+        -moz-box-shadow: 0px 0px 50px -8px rgba(0,0,0,0.75);
+		}
+
+    .lds-roller {
+        display: inline-block;
+        position: absolute;
+        width: 80px;
+        height: 80px;
+    }
+    .lds-roller div {
+        animation: lds-roller 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+        transform-origin: 40px 40px;
+    }
+    .lds-roller div:after {
+        content: " ";
+        display: block;
+        position: absolute;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #fff;
+        margin: -4px 0 0 -4px;
+    }
+    .lds-roller div:nth-child(1) {
+        animation-delay: -0.036s;
+    }
+    .lds-roller div:nth-child(1):after {
+        top: 63px;
+        left: 63px;
+    }
+    .lds-roller div:nth-child(2) {
+        animation-delay: -0.072s;
+    }
+    .lds-roller div:nth-child(2):after {
+        top: 68px;
+        left: 56px;
+    }
+    .lds-roller div:nth-child(3) {
+        animation-delay: -0.108s;
+    }
+    .lds-roller div:nth-child(3):after {
+        top: 71px;
+        left: 48px;
+    }
+    .lds-roller div:nth-child(4) {
+        animation-delay: -0.144s;
+    }
+    .lds-roller div:nth-child(4):after {
+        top: 72px;
+        left: 40px;
+    }
+    .lds-roller div:nth-child(5) {
+        animation-delay: -0.18s;
+    }
+    .lds-roller div:nth-child(5):after {
+        top: 71px;
+        left: 32px;
+    }
+    .lds-roller div:nth-child(6) {
+        animation-delay: -0.216s;
+    }
+    .lds-roller div:nth-child(6):after {
+        top: 68px;
+        left: 24px;
+    }
+    .lds-roller div:nth-child(7) {
+        animation-delay: -0.252s;
+    }
+    .lds-roller div:nth-child(7):after {
+        top: 63px;
+        left: 17px;
+    }
+    .lds-roller div:nth-child(8) {
+        animation-delay: -0.288s;
+    }
+    .lds-roller div:nth-child(8):after {
+        top: 56px;
+        left: 12px;
+    }
+    @keyframes lds-roller {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
 </style>
