@@ -4,7 +4,6 @@
 
 <header>
 	<div>
-
 	</div>
 	<nav>
 		<ul>
@@ -17,9 +16,9 @@
 			<li aria-current={$page.url.pathname === '/rsvp' ? 'page' : undefined}>
 				<a href="/rsvp">RSVP</a>
 			</li>
-<!--			<li aria-current={$page.url.pathname.startsWith('/sverdle') ? 'page' : undefined}>-->
-<!--				<a href="/sverdle">Sverdle</a>-->
-<!--			</li>-->
+			<!--			<li aria-current={$page.url.pathname.startsWith('/sverdle') ? 'page' : undefined}>-->
+			<!--				<a href="/sverdle">Sverdle</a>-->
+			<!--			</li>-->
 		</ul>
 	</nav>
 
@@ -29,6 +28,8 @@
     header {
         display: flex;
         justify-content: space-between;
+        font-family: "Jost", sans-serif;
+        font-optical-sizing: auto;
     }
 
     nav {

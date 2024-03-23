@@ -8,9 +8,14 @@
 </svelte:head>
 
 <section>
-	<h1>
-		Jennie + Minhaz
-	</h1>
+	<div class="title-container">
+		<div class="front">
+			Jennie + Minhaz
+		</div>
+		<div class="shadow">
+			Jennie + Minhaz
+		</div>
+	</div>
 </section>
 
 <style>
@@ -40,8 +45,24 @@
         flex: 0.6;
     }
 
-    h1 {
+    .title-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .front {
         font-family: 'Gnomon-Web', serif;
         font-size: 10em;
+        color: black;
+        position: absolute;
+    }
+
+    .shadow {
+        z-index: -1;
+        font-family: 'Gnomon-Simple', serif;
+        font-size: 10em;
+        position: absolute;
+        color: red;
     }
 </style>
