@@ -1,4 +1,61 @@
 <script lang="ts">
+	import { afterUpdate, beforeUpdate, onMount } from 'svelte';
+	import js from 'jquery'
+
+	let sizeAnimationCallback: () => void;
+
+	let oldHeight: number;
+
+	onMount(() => {
+		window.js = js;
+
+		const contentMask = js("form-container-mask")
+		const contentBoxId = '#form-container';
+
+		const currentHeight = js(contentBoxId).height();
+		const formContainerMaskHeight = js("#form-container-mask").height();
+		const formContainerHeight = js("#form-container").height();
+		console.log("formContainerHeight", formContainerHeight);
+		console.log("formContainerMaskHeight", formContainerMaskHeight);
+		contentMask.width(50);
+
+		contentMask.css("width", 50);
+
+		sizeAnimationCallback = async () => {
+			// wait for 1 second
+			const contentMask = js("form-container-mask")
+			const formContainerMaskHeight = js("#form-container-mask").height();
+			const formContainerHeight = js("#form-container").height();
+			console.log("formContainerHeight", formContainerHeight);
+			console.log("formContainerMaskHeight", formContainerMaskHeight);
+
+			js("#form-container-mask").height(formContainerHeight);
+		}
+	});
+
+	beforeUpdate(() => {
+		console.log("beforeUpdate");
+
+		const contentMask = js("form-container-mask")
+		const formContainerMaskHeight = js("#form-container-mask").height();
+		const formContainerHeight = js("#form-container").height();
+		oldHeight = formContainerMaskHeight || 0;
+		//console.log("formContainerHeight", formContainerHeight);
+		//console.log("formContainerMaskHeight", formContainerMaskHeight);
+	})
+
+	afterUpdate(() => {
+		console.log("afterUpdate");
+		const contentMask = js("form-container-mask")
+		const formContainerMaskHeight = js("#form-container-mask").height();
+		const formContainerHeight = js("#form-container").height();
+		if (retrieved) {
+			console.log("formContainerHeight", formContainerHeight);
+			console.log("formContainerMaskHeight", formContainerMaskHeight);
+			js("#form-container-mask").height(oldHeight);
+			js("#form-container-mask").height(formContainerMaskHeight);
+		}
+	})
 
 	enum InputType {
 		INSERT = 'insertText',
@@ -39,6 +96,7 @@
 	let plusOneSelected = false;
 
 	let errorMessage: string = null;
+	//contentMask.css('height', currentHeight);
 
 	function getRsvp() {
 		loading = true;
@@ -159,97 +217,100 @@
 </script>
 
 <section>
-	<div class="form-container" class:loading>
+	<div id="form-container-mask" class="form-container-mask">
+		<div id="form-container" class="form-container" class:loading>
 
-		{#if loading}
-			<div class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
-		{/if}
+			{#if loading}
+				<div class="lds-heart"><div></div></div>
+			{/if}
 
-		<h1>RSVP</h1>
-		<form class="form-fields" on:submit={submit}>
-			<input
-				class="input-field"
-				type="text"
-				name="firstName"
-				placeholder="First Name"
-				bind:value={firstName}
-				on:input={e => validateFirstName(e)}
-				required
-			/>
-			<input
-				class="input-field"
-				type="text"
-				name="lastName"
-				placeholder="Last Name"
-				bind:value={lastName}
-				on:input={e => validateLastName(e)}
-				required
-			/>
-
-			{#if retrieved}
+			<h1>RSVP</h1>
+			<form class="form-fields" on:submit={submit}>
 				<input
 					class="input-field"
-					type="email"
-					name="email"
-					placeholder="email"
-					bind:value={email}
-					on:change={e => validateEmail(e)}
+					type="text"
+					name="firstName"
+					placeholder="First Name"
+					bind:value={firstName}
+					on:input={e => validateFirstName(e)}
 					required
 				/>
 				<input
 					class="input-field"
 					type="text"
-					name="phoneNumber"
-					placeholder="phoneNumber"
-					value={phoneNumberVisual}
-					on:input={e => validateNumberInput(e)}
-					on:paste={e => validatePhoneNumberPasteInput(e)}
+					name="lastName"
+					placeholder="Last Name"
+					bind:value={lastName}
+					on:input={e => validateLastName(e)}
 					required
 				/>
-				<div class="food-selection">
-					<label for="chickenBox">
-						Chicken
-						<input
-							id="chickenBox"
-							type="checkbox"
-							on:change={foodSelectChangeInput}
-							bind:checked={chickenSelected}
-							disabled="{!chickenSelected && foodSelected}"
-						>
-					</label>
-					<label for="beefBox">
-						Beef
-						<input
-							id="beefBox"
-							type="checkbox"
-							on:change={foodSelectChangeInput}
-							bind:checked={beefSelected}
-							disabled="{!beefSelected && foodSelected}"
-						>
-					</label>
 
-					<label for="fishBox">
-						Fish
-						<input
-							id="fishBox"
-							type="checkbox"
-							on:change={foodSelectChangeInput}
-							bind:checked={fishSelected}
-							disabled="{!fishSelected && foodSelected}"
-							required
-						>
-					</label>
-				</div>
-				<input class="submit-button" type="submit" name="submit" value="Submit">
-			{:else}
-				<input class="submit-button" type="button" on:click={getRsvp} name="submit" value="Find Invitation">
-			{/if}
+				{#if retrieved}
+					<input
+						class="input-field"
+						type="email"
+						name="email"
+						placeholder="email"
+						bind:value={email}
+						on:change={e => validateEmail(e)}
+						required
+					/>
+					<input
+						class="input-field"
+						type="text"
+						name="phoneNumber"
+						placeholder="phoneNumber"
+						value={phoneNumberVisual}
+						on:input={e => validateNumberInput(e)}
+						on:paste={e => validatePhoneNumberPasteInput(e)}
+						required
+					/>
+					<div class="food-selection">
+						<label for="chickenBox">
+							Chicken
+							<input
+								id="chickenBox"
+								type="checkbox"
+								on:change={foodSelectChangeInput}
+								bind:checked={chickenSelected}
+								disabled="{!chickenSelected && foodSelected}"
+							>
+						</label>
+						<label for="beefBox">
+							Beef
+							<input
+								id="beefBox"
+								type="checkbox"
+								class=""
+								on:change={foodSelectChangeInput}
+								bind:checked={beefSelected}
+								disabled="{!beefSelected && foodSelected}"
+							>
+						</label>
 
-			{#if errorMessage}
-				<div class="error-message">{errorMessage}</div>
-			{/if}
+						<label for="fishBox">
+							Fish
+							<input
+								id="fishBox"
+								type="checkbox"
+								on:change={foodSelectChangeInput}
+								bind:checked={fishSelected}
+								disabled="{!fishSelected && foodSelected}"
+								required
+							>
+						</label>
+					</div>
+					<input class="submit-button" type="submit" name="submit" value="Submit">
+				{:else}
+					<input id="find-invitation-button" class="submit-button" type="button" on:click={getRsvp} name="submit" value="Find Invitation">
+				{/if}
 
-		</form>
+				{#if errorMessage}
+					<div class="error-message">{errorMessage}</div>
+				{/if}
+
+			</form>
+		</div>
 	</div>
 </section>
 
@@ -275,11 +336,15 @@
 
     .input-field {
         border: none;
-        background: #ffffff;
+        background: #dfdfdf;
         padding: 10px;
         border-radius: 5px;
         width: 60%;
     }
+
+		.input-field::placeholder {
+        color: #595959;
+		}
 
     .input-field:focus {
         color: black;
@@ -287,12 +352,21 @@
         outline: none;
     }
 
+		.form-container-mask {
+        margin: 10px;
+				width: 100%;
+				display: flex;
+				justify-content: center;
+				overflow: hidden;
+        transition: height 1s ease;
+		}
+
     .form-container {
+				padding: 10px;
         display: flex;
         flex-direction: column;
         justify-content: space-around;
         align-items: center;
-        padding: 10px;
         border-radius: 5px;
         background: #9c9c9c;
         width: 60%;
@@ -333,88 +407,94 @@
         -moz-box-shadow: 0px 0px 50px -8px rgba(0,0,0,0.75);
 		}
 
-    .lds-roller {
+
+		/*
+		Pop in animation
+		*/
+
+		.pop-in {
+        animation-duration: 0.5s;
+        animation-name: animate-fade;
+        animation-delay: 0.5s;
+        animation-fill-mode: backwards;
+		}
+
+    @keyframes animate-fade {
+        0% { opacity: 0; }
+        100% { opacity: 1; }
+    }
+
+    .test {
+        animation-name: test;
+        animation-duration: 1s;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+    @keyframes test {
+        0% {
+            max-height: 0;
+        }
+        100% {
+            max-height: 200px;
+        }
+    }
+
+		/*
+		Loading Animation
+		*/
+
+    .lds-heart {
         display: inline-block;
         position: absolute;
         width: 80px;
         height: 80px;
-    }
-    .lds-roller div {
-        animation: lds-roller 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+        transform: rotate(45deg);
         transform-origin: 40px 40px;
     }
-    .lds-roller div:after {
-        content: " ";
-        display: block;
-        position: absolute;
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: #fff;
-        margin: -4px 0 0 -4px;
-    }
-    .lds-roller div:nth-child(1) {
-        animation-delay: -0.036s;
-    }
-    .lds-roller div:nth-child(1):after {
-        top: 63px;
-        left: 63px;
-    }
-    .lds-roller div:nth-child(2) {
-        animation-delay: -0.072s;
-    }
-    .lds-roller div:nth-child(2):after {
-        top: 68px;
-        left: 56px;
-    }
-    .lds-roller div:nth-child(3) {
-        animation-delay: -0.108s;
-    }
-    .lds-roller div:nth-child(3):after {
-        top: 71px;
-        left: 48px;
-    }
-    .lds-roller div:nth-child(4) {
-        animation-delay: -0.144s;
-    }
-    .lds-roller div:nth-child(4):after {
-        top: 72px;
-        left: 40px;
-    }
-    .lds-roller div:nth-child(5) {
-        animation-delay: -0.18s;
-    }
-    .lds-roller div:nth-child(5):after {
-        top: 71px;
+    .lds-heart div {
+        top: 32px;
         left: 32px;
+        position: absolute;
+        width: max(4vw, 8vh);
+        height: max(4vw, 8vh);
+        background: #fff;
+        animation: lds-heart 1.2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
     }
-    .lds-roller div:nth-child(6) {
-        animation-delay: -0.216s;
+    .lds-heart div:after,
+    .lds-heart div:before {
+        content: " ";
+        position: absolute;
+        display: block;
+        width: max(4vw, 8vh);
+        height: max(4vw, 8vh);
+        background: #fff;
     }
-    .lds-roller div:nth-child(6):after {
-        top: 68px;
-        left: 24px;
+    .lds-heart div:before {
+        left: min(-2vw, -5vh);
+        border-radius: 50% 0 0 50%;
     }
-    .lds-roller div:nth-child(7) {
-        animation-delay: -0.252s;
+    .lds-heart div:after {
+        top: min(-2vw, -5vh);
+        border-radius: 50% 50% 0 0;
     }
-    .lds-roller div:nth-child(7):after {
-        top: 63px;
-        left: 17px;
-    }
-    .lds-roller div:nth-child(8) {
-        animation-delay: -0.288s;
-    }
-    .lds-roller div:nth-child(8):after {
-        top: 56px;
-        left: 12px;
-    }
-    @keyframes lds-roller {
+    @keyframes lds-heart {
         0% {
-            transform: rotate(0deg);
+            transform: scale(0.95);
+        }
+        5% {
+            transform: scale(1.1);
+        }
+        39% {
+            transform: scale(0.85);
+        }
+        45% {
+            transform: scale(1);
+        }
+        60% {
+            transform: scale(0.95);
         }
         100% {
-            transform: rotate(360deg);
+            transform: scale(0.9);
         }
     }
 
