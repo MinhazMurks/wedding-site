@@ -16,6 +16,9 @@
         display: flex;
         flex-direction: column;
         min-height: 100vh;
+
+        background: rgb(143,7,7);
+        background: linear-gradient(209deg, rgba(143,7,7,1) 20%, rgba(78,18,18,1) 75%);
     }
 
     main {

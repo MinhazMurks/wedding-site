@@ -1,61 +1,38 @@
 <script lang="ts">
-	import { afterUpdate, beforeUpdate, onMount } from 'svelte';
+	import { afterUpdate, beforeUpdate, onMount, tick } from 'svelte';
+	import { fade } from 'svelte/transition';
 	import js from 'jquery'
+	import SegmentedButton from './SegmentedButton.svelte';
 
-	let sizeAnimationCallback: () => void;
+	let formContainerMask: HTMLElement;
+	let formContainerHeight
 
-	let oldHeight: number;
+	const updateHeightManually = (oldHeight: number) => {
+		updateContainerForError = false;
+		const formContainerMaskHeight = js("#form-container-mask").outerHeight(true) || 0;
+		const formContainerHeight = js("#form-container").outerHeight(true) || 0;
+		js("#form-container-mask").outerHeight(oldHeight);
+		js("#form-container-mask").outerHeight(formContainerHeight);
+
+		setTimeout(() => {
+			js("#form-container-mask").css({
+				height: "auto"
+			});
+		}, 800
+		);
+
+		//formContainerMask.style.setProperty("height", `${oldHeight}px`);
+		//formContainerMask.style.setProperty("height", `${formContainerHeight}px`);
+
+		//const newHeight = formContainerMask.offsetHeight;
+		//formContainerMask.style.height = `${oldHeight}px`;
+		//formContainerMask.style.height = `${newHeight}px`;
+		//console.log("setting to " + oldHeight + " then " + newHeight);
+	}
 
 	onMount(() => {
 		window.js = js;
-
-		const contentMask = js("form-container-mask")
-		const contentBoxId = '#form-container';
-
-		const currentHeight = js(contentBoxId).height();
-		const formContainerMaskHeight = js("#form-container-mask").height();
-		const formContainerHeight = js("#form-container").height();
-		console.log("formContainerHeight", formContainerHeight);
-		console.log("formContainerMaskHeight", formContainerMaskHeight);
-		contentMask.width(50);
-
-		contentMask.css("width", 50);
-
-		sizeAnimationCallback = async () => {
-			// wait for 1 second
-			const contentMask = js("form-container-mask")
-			const formContainerMaskHeight = js("#form-container-mask").height();
-			const formContainerHeight = js("#form-container").height();
-			console.log("formContainerHeight", formContainerHeight);
-			console.log("formContainerMaskHeight", formContainerMaskHeight);
-
-			js("#form-container-mask").height(formContainerHeight);
-		}
 	});
-
-	beforeUpdate(() => {
-		console.log("beforeUpdate");
-
-		const contentMask = js("form-container-mask")
-		const formContainerMaskHeight = js("#form-container-mask").height();
-		const formContainerHeight = js("#form-container").height();
-		oldHeight = formContainerMaskHeight || 0;
-		//console.log("formContainerHeight", formContainerHeight);
-		//console.log("formContainerMaskHeight", formContainerMaskHeight);
-	})
-
-	afterUpdate(() => {
-		console.log("afterUpdate");
-		const contentMask = js("form-container-mask")
-		const formContainerMaskHeight = js("#form-container-mask").height();
-		const formContainerHeight = js("#form-container").height();
-		if (retrieved) {
-			console.log("formContainerHeight", formContainerHeight);
-			console.log("formContainerMaskHeight", formContainerMaskHeight);
-			js("#form-container-mask").height(oldHeight);
-			js("#form-container-mask").height(formContainerMaskHeight);
-		}
-	})
 
 	enum InputType {
 		INSERT = 'insertText',
@@ -86,8 +63,8 @@
 	let email = '';
 	let phoneNumber = '';
 	let phoneNumberVisual = '';
-	let foodSelected = false;
 
+	let foodSelected = false;
 	let chickenSelected = false;
 	let beefSelected = false;
 	let fishSelected = false;
@@ -95,8 +72,8 @@
 	let plusOneEnabled = false;
 	let plusOneSelected = false;
 
-	let errorMessage: string = null;
-	//contentMask.css('height', currentHeight);
+	let errorMessage: string | null = null;
+	let updateContainerForError = false;
 
 	function getRsvp() {
 		loading = true;
@@ -120,8 +97,10 @@
 				}
 				return response.json();
 			})
-			.then(data => {
+			.then(async data => {
 				data = data as GetRsvpResponse;
+
+				const currentContainerMaskHeight = formContainerMask.offsetHeight;
 
 				firstName = data.firstName;
 				lastName = data.lastName;
@@ -129,12 +108,20 @@
 
 				loading = false;
 				retrieved = true;
+				errorMessage = null;
+
+				await tick();
+				updateHeightManually(currentContainerMaskHeight);
 			})
-			.catch(error =>
-			{
-				console.log("CAUGHT HERE " + error.message);
+			.catch(async error => {
+				const currentContainerMaskHeight = formContainerMask.offsetHeight;
+
 				loading = false;
 				errorMessage = error.message;
+				updateContainerForError = true;
+
+				await tick();
+				updateHeightManually(currentContainerMaskHeight);
 			});
 	}
 
@@ -217,13 +204,32 @@
 </script>
 
 <section>
-	<div id="form-container-mask" class="form-container-mask">
+	<div bind:this={formContainerMask} id="form-container-mask" class="form-container-mask">
+		<SegmentedButton
+			name="group"
+			defaultIndex={0}
+			segments={[
+				{
+					label: 'Chicken',
+					value: 'chicken',
+					bound: null,
+				},
+				{
+					label: 'Beef',
+					value: 'beef',
+					bound: null,
+				},
+				{
+					label: 'Fish',
+					value: 'fish',
+					bound: null,
+				}
+			]}
+		/>
 		<div id="form-container" class="form-container" class:loading>
-
 			{#if loading}
-				<div class="lds-heart"><div></div></div>
+				<div transition:fade={{duration: 100}} class="lds-heart"><div></div></div>
 			{/if}
-
 			<h1>RSVP</h1>
 			<form class="form-fields" on:submit={submit}>
 				<input
@@ -231,6 +237,7 @@
 					type="text"
 					name="firstName"
 					placeholder="First Name"
+					in:fade={{duration:200}}
 					bind:value={firstName}
 					on:input={e => validateFirstName(e)}
 					required
@@ -240,6 +247,7 @@
 					type="text"
 					name="lastName"
 					placeholder="Last Name"
+					in:fade={{duration:400}}
 					bind:value={lastName}
 					on:input={e => validateLastName(e)}
 					required
@@ -252,6 +260,7 @@
 						name="email"
 						placeholder="email"
 						bind:value={email}
+						in:fade={{duration:600}}
 						on:change={e => validateEmail(e)}
 						required
 					/>
@@ -261,12 +270,16 @@
 						name="phoneNumber"
 						placeholder="phoneNumber"
 						value={phoneNumberVisual}
+						in:fade={{duration:800}}
 						on:input={e => validateNumberInput(e)}
 						on:paste={e => validatePhoneNumberPasteInput(e)}
 						required
 					/>
-					<div class="food-selection">
-						<label for="chickenBox">
+					<div
+						class="food-selection"
+						in:fade={{duration:1000}}
+					>
+						<label class="label-container" for="chickenBox">
 							Chicken
 							<input
 								id="chickenBox"
@@ -276,7 +289,7 @@
 								disabled="{!chickenSelected && foodSelected}"
 							>
 						</label>
-						<label for="beefBox">
+						<label class="label-container" for="beefBox">
 							Beef
 							<input
 								id="beefBox"
@@ -287,8 +300,7 @@
 								disabled="{!beefSelected && foodSelected}"
 							>
 						</label>
-
-						<label for="fishBox">
+						<label class="label-container" for="fishBox">
 							Fish
 							<input
 								id="fishBox"
@@ -306,9 +318,8 @@
 				{/if}
 
 				{#if errorMessage}
-					<div class="error-message">{errorMessage}</div>
+					<div in:fade class="error-message">{errorMessage}</div>
 				{/if}
-
 			</form>
 		</div>
 	</div>
@@ -324,6 +335,7 @@
 
     h1 {
         font-size: max(8vw, 10vh);
+				color: white;
         margin-top: 2rem;
         margin-bottom: 2rem;
     }
@@ -353,22 +365,21 @@
     }
 
 		.form-container-mask {
-        margin: 10px;
 				width: 100%;
 				display: flex;
 				justify-content: center;
 				overflow: hidden;
-        transition: height 1s ease;
+        transition: height 800ms ease;
 		}
 
     .form-container {
-				padding: 10px;
+				padding: 20px;
         display: flex;
         flex-direction: column;
         justify-content: space-around;
         align-items: center;
         border-radius: 5px;
-        background: #9c9c9c;
+        background: #000000;
         width: 60%;
     }
 
@@ -383,8 +394,15 @@
     .food-selection {
         display: flex;
         flex-direction: row;
-        column-gap: 20px;
+        column-gap: 30px;
+				justify-content: space-around;
     }
+
+		.label-container {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+		}
 
     .submit-button {
         border: none;
@@ -397,46 +415,20 @@
 				color: white;
 				border-radius: 5px;
 				margin: 10px;
-				padding-top: 10px;
-				padding-bottom: 10px;
-				padding-left: 50px;
-				padding-right: 50px;
+        padding: 10px 50px;
 
         box-shadow: 0px 0px 50px -8px rgba(0,0,0,0.75);
         -webkit-box-shadow: 0px 0px 50px -8px rgba(0,0,0,0.75);
         -moz-box-shadow: 0px 0px 50px -8px rgba(0,0,0,0.75);
 		}
 
-
 		/*
 		Pop in animation
 		*/
 
-		.pop-in {
-        animation-duration: 0.5s;
-        animation-name: animate-fade;
-        animation-delay: 0.5s;
-        animation-fill-mode: backwards;
-		}
-
     @keyframes animate-fade {
         0% { opacity: 0; }
         100% { opacity: 1; }
-    }
-
-    .test {
-        animation-name: test;
-        animation-duration: 1s;
-        overflow: hidden;
-        white-space: nowrap;
-    }
-    @keyframes test {
-        0% {
-            max-height: 0;
-        }
-        100% {
-            max-height: 200px;
-        }
     }
 
 		/*
@@ -451,6 +443,7 @@
         transform: rotate(45deg);
         transform-origin: 40px 40px;
     }
+
     .lds-heart div {
         top: 32px;
         left: 32px;
@@ -460,6 +453,7 @@
         background: #fff;
         animation: lds-heart 1.2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
     }
+
     .lds-heart div:after,
     .lds-heart div:before {
         content: " ";

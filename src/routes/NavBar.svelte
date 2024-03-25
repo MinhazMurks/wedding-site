@@ -36,7 +36,7 @@
         display: flex;
         justify-content: center;
         width: 100vw;
-        background: rgba(255, 255, 255, 0.7);
+        background: rgb(0, 0, 0);
     }
 
     ul {

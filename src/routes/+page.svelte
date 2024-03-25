@@ -1,5 +1,8 @@
 <script>
 	export const prerender = true;
+
+	let minuteNow = new Date().getMinutes();
+	console.log(minuteNow);
 </script>
 
 <svelte:head>
@@ -8,11 +11,11 @@
 </svelte:head>
 
 <section>
-	<div class="title-container">
-		<div class="front">
+	<div class="title-container" style="--minute-now: {minuteNow}">
+		<div class="shadow">
 			Jennie + Minhaz
 		</div>
-		<div class="shadow">
+		<div class="front">
 			Jennie + Minhaz
 		</div>
 	</div>
@@ -52,17 +55,18 @@
     }
 
     .front {
-        font-family: 'Gnomon-Web', serif;
+        font-family: 'Gnomon-Simple', serif;
         font-size: 10em;
-        color: black;
+        color: #ffffff;
         position: absolute;
+        font-variation-settings: "TOTD" 0, "DIST" 0;
     }
 
     .shadow {
-        z-index: -1;
-        font-family: 'Gnomon-Simple', serif;
+        font-family: 'Gnomon-Web', serif;
         font-size: 10em;
         position: absolute;
-        color: red;
+        color: #000000;
+				font-variation-settings: "TOTD" var(--minute-now), "DIST" 200;
     }
 </style>
