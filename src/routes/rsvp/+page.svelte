@@ -1,19 +1,19 @@
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
-	import { fade } from 'svelte/transition';
-	import js from 'jquery';
-	import SegmentedButton from './SegmentedButton.svelte';
+	import { onMount, tick } from "svelte";
+	import { fade } from "svelte/transition";
+	import js from "jquery";
+	import SegmentedButton from "./SegmentedButton.svelte";
 
 	let formContainerMask: HTMLElement;
 
 	const updateHeightManually = (oldHeight: number) => {
-		const formContainerHeight = js('#form-container').outerHeight(true) || 0;
-		js('#form-container-mask').outerHeight(oldHeight);
-		js('#form-container-mask').outerHeight(formContainerHeight);
+		const formContainerHeight = js("#form-container").outerHeight(true) || 0;
+		js("#form-container-mask").outerHeight(oldHeight);
+		js("#form-container-mask").outerHeight(formContainerHeight);
 
 		setTimeout(() => {
-				js('#form-container-mask').css({
-					height: 'auto'
+				js("#form-container-mask").css({
+					height: "auto"
 				});
 			}, 800
 		);
@@ -24,10 +24,10 @@
 	});
 
 	enum InputType {
-		INSERT = 'insertText',
-		INSERT_FROM_PASTE = 'insertFromPaste',
-		DELETE_BACKWARD = 'deleteContentBackward',
-		DELETE_FORWARD = 'deleteContentForward',
+		INSERT = "insertText",
+		INSERT_FROM_PASTE = "insertFromPaste",
+		DELETE_BACKWARD = "deleteContentBackward",
+		DELETE_FORWARD = "deleteContentForward",
 	}
 
 	type GetRsvpResponse = {
@@ -44,24 +44,22 @@
 		message: string,
 	}
 
-	const weddingServiceHost = 'localhost:8080';
+	const weddingServiceHost = "localhost:8080";
 
 	const usNumberFormat = [2, 5];
 
-	let retrieved = false;
-	let attending = false;
 	let loading = false;
 
-	let firstName = '';
-	let lastName = '';
-	let email = '';
-	let phoneNumber = '';
-	let phoneNumberVisual = '';
+	let declined = false;
+	let retrieved = false;
+	let attending = false;
 
-	let foodSelected = false;
-	let chickenSelected = false;
-	let beefSelected = false;
-	let fishSelected = false;
+	let firstName = "";
+	let lastName = "";
+	let email = "";
+	let phoneNumber = "";
+	let phoneNumberVisual = "";
+	let foodSelection = "chicken";
 
 	let plusOneEnabled = false;
 	let plusOneSelected = false;
@@ -74,14 +72,14 @@
 			firstName: firstName,
 			lastName: lastName
 		}), {
-			method: 'GET',
+			method: "GET",
 			headers: {
-				'Content-Type': 'application/json'
+				"Content-Type": "application/json"
 			}
 		})
 			.then(async response => {
 				if (response.status >= 500) {
-					throw new Error('Something went wrong');
+					throw new Error("Something went wrong");
 				} else if (response.status >= 400) {
 					const errorResponse = await response.json() as never as ErrorResponse;
 					console.log(response);
@@ -119,17 +117,20 @@
 	function sendDecline() {
 		loading = true;
 
-		fetch(`http://${weddingServiceHost}/api/v1/rsvp?` + new URLSearchParams({
-			attending: 'false'
-		}), {
-			method: 'PUT',
+		fetch(`http://${weddingServiceHost}/api/v1/rsvp?`, {
+			method: "PUT",
 			headers: {
-				'Content-Type': 'application/json'
-			}
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify({
+				attending: false,
+				firstName: firstName,
+				lastName: lastName
+			})
 		})
 			.then(async response => {
 				if (response.status >= 500) {
-					throw new Error('Something went wrong');
+					throw new Error("Something went wrong");
 				} else if (response.status >= 400) {
 					const errorResponse = await response.json() as never as ErrorResponse;
 					console.log(response);
@@ -137,17 +138,12 @@
 				}
 				return response.json();
 			})
-			.then(async data => {
-				data = data as GetRsvpResponse;
+			.then(async () => {
 
 				const currentContainerMaskHeight = formContainerMask.offsetHeight;
 
-				firstName = data.firstName;
-				lastName = data.lastName;
-				plusOneEnabled = data.plusOneEnabled;
-
 				loading = false;
-				retrieved = true;
+				declined = true;
 				errorMessage = null;
 
 				await tick();
@@ -164,28 +160,82 @@
 			});
 	}
 
+	async function confirmAttendance() {
+		attending = true;
+
+		const currentContainerMaskHeight = formContainerMask.offsetHeight;
+		await tick();
+
+		updateHeightManually(currentContainerMaskHeight);
+	}
+
 	function submit() {
-		console.log('Submitting...');
+		fetch(`http://${weddingServiceHost}/api/v1/rsvp?`, {
+				method: "PUT",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({
+					attending: true,
+					firstName: firstName,
+					lastName: lastName,
+					email: email,
+					phoneNumber: phoneNumber,
+					foodSelection: foodSelection,
+					plusOneEnabled: plusOneEnabled,
+				})
+		})
+			.then(async response => {
+				if (response.status >= 500) {
+					throw new Error("Something went wrong");
+				} else if (response.status >= 400) {
+					const errorResponse = await response.json() as never as ErrorResponse;
+					console.log(response);
+					throw new Error(errorResponse.message);
+				}
+				return response.json();
+			})
+			.then(async () => {
+
+				const currentContainerMaskHeight = formContainerMask.offsetHeight;
+
+				loading = false;
+				declined = true;
+				errorMessage = null;
+
+				await tick();
+				updateHeightManually(currentContainerMaskHeight);
+			})
+			.catch(async error => {
+				const currentContainerMaskHeight = formContainerMask.offsetHeight;
+
+				loading = false;
+				errorMessage = error.message;
+
+				await tick();
+				updateHeightManually(currentContainerMaskHeight);
+			});
 	}
 
 	function validateFirstName(event: Event) {
-		let inputEvent = event as InputEvent;
-		firstName = inputEvent.target.value;
+		let inputEventTarget = (event.target) as HTMLInputElement;
+		firstName = inputEventTarget.value;
 	}
 
 	function validateLastName(event: Event) {
-		let inputEvent = event as InputEvent;
-		lastName = inputEvent.target.value;
+		let inputEventTarget = (event.target) as HTMLInputElement;
+		lastName = inputEventTarget.value;
 	}
 
 	function validateEmail(event: Event) {
-		console.log('validateEmail', event);
+		console.log("validateEmail", event);
 	}
 
 	function validateNumberInput(event: Event) {
 		event.preventDefault();
-		let inputEvent = event as InputEvent;
-		let newCharacter = inputEvent.data;
+		const inputEventTarget = event.target as HTMLInputElement;
+		const inputEvent = event as InputEvent;
+		const newCharacter = inputEvent.data;
 
 		switch (inputEvent.inputType) {
 			case InputType.INSERT_FROM_PASTE:
@@ -201,44 +251,46 @@
 					}
 					convertPhoneNumberInput();
 				}
-				inputEvent.target.value = phoneNumberVisual;
+				inputEventTarget.value = phoneNumberVisual;
 				break;
 			case InputType.DELETE_FORWARD:
 			case InputType.DELETE_BACKWARD:
 				if (inputEvent.target)
-					phoneNumber = inputEvent.target.value.replace(/\D/g, '');
+					phoneNumber = inputEventTarget.value.replace(/\D/g, "");
 				convertPhoneNumberInput();
 				break;
 			default:
-				inputEvent.target.value = phoneNumberVisual;
+				inputEventTarget.value = phoneNumberVisual;
 		}
 	}
 
 	function convertPhoneNumberInput() {
-		phoneNumberVisual = '';
+		phoneNumberVisual = "";
 		for (let i = 0; i < phoneNumber.length; i++) {
 			phoneNumberVisual += phoneNumber.charAt(i);
 			if (usNumberFormat.includes(i) && i + 1 < phoneNumber.length) {
-				phoneNumberVisual += '-';
+				phoneNumberVisual += "-";
 			}
 		}
 	}
 
 	function validatePhoneNumberPasteInput(event: Event) {
 		event.preventDefault();
-		const pastedData = (event as ClipboardEvent).clipboardData?.getData('text');
+		const pastedData = (event as ClipboardEvent).clipboardData?.getData("text");
 
 		if (pastedData) {
-			phoneNumber += pastedData.replace(/\D/g, '');
+			phoneNumber += pastedData.replace(/\D/g, "");
 			phoneNumber = phoneNumber.substring(0, 10);
 			convertPhoneNumberInput();
 		}
 	}
 
-	function foodSelectChangeInput() {
-		foodSelected = !foodSelected;
+	function updateFoodSelection(value: string): void {
+		foodSelection = value;
+	}
 
-		console.log(fishSelected);
+	function updatePlusOne(value: string): void {
+		plusOneSelected = Boolean(value);
 	}
 </script>
 
@@ -275,14 +327,30 @@
 					/>
 				{/if}
 
-				{#if retrieved}
-					<h2 transition:fade>Will you be able to accept?</h2>
-					<div class="attending-dialogue">
+				{#if retrieved && !declined && !attending}
+						<h2 in:fade >Will you be able to accept?</h2>
+						<div in:fade class="attending-dialogue">
+							<input
+								class="attending-dialogue-button"
+								type="button"
+								name="attending-yes"
+								value="Graciously Accept"
+								on:click={confirmAttendance}
+							>
 
-						<input class="attending-dialogue-button" type="button" name="attending-yes"
-									 value="Graciously Accept">
-						<input class="attending-dialogue-button red" type="button" name="attending-yes"
-									 value="Regrettably Decline">
+							<input
+								class="attending-dialogue-button red"
+								type="button"
+								name="attending-no"
+								value="Regrettably Decline"
+								on:click={sendDecline}
+							>
+						</div>
+				{/if}
+
+				{#if retrieved && declined}
+					<div class="declined-dialogue">
+						<h2 in:fade={{duration: 200}}>Thank you, your RSVP has been submitted successfully!</h2>
 					</div>
 				{/if}
 
@@ -317,26 +385,55 @@
 							<SegmentedButton
 								name="group"
 								defaultIndex={0}
+								callback={updateFoodSelection}
 								segments={[
 							{
-								label: 'Chicken',
-								value: 'chicken',
+								label: "Chicken",
+								value: "chicken",
 								bound: null,
 							},
 							{
-								label: 'Beef',
-								value: 'beef',
+								label: "Beef",
+								value: "beef",
 								bound: null,
 							},
 							{
-								label: 'Fish',
-								value: 'fish',
+								label: "Fish",
+								value: "fish",
 								bound: null,
 							}
 						]}
 							/>
 						</div>
 					</div>
+
+					{#if plusOneEnabled}
+						<div class="food-section">
+							<h2>Will you be attending alone?</h2>
+							<div
+								class="food-selection"
+								in:fade={{duration:1000}}
+							>
+								<SegmentedButton
+									name="plus-one"
+									defaultIndex={0}
+									callback={updatePlusOne}
+									segments={[
+										{
+											label: "Attending solo",
+											value: "true",
+											bound: null,
+										},
+										{
+											label: "Bringing a Guest",
+											value: "false",
+											bound: null,
+										}
+									]}
+								/>
+							</div>
+						</div>
+					{/if}
 					<input class="submit-button" type="submit" name="submit" value="Submit">
 				{:else if !retrieved}
 					<input id="find-invitation-button" class="submit-button" type="button" on:click={getRsvp} name="submit"
@@ -362,14 +459,14 @@
     }
 
     h1 {
-        font-size: max(8vw, 10vh);
+        font-size: max(6vw, 10vh);
         color: var(--light-text-color);
         margin-top: 2rem;
         margin-bottom: 2rem;
     }
 
     h2 {
-        font-size: max(2vw, 2vh);
+        font-size: max(1.5vw, 2vh);
         color: var(--light-text-color);
         margin-top: 2rem;
         margin-bottom: 2rem;
@@ -408,6 +505,13 @@
         justify-content: center;
         column-gap: 10px;
     }
+
+		.declined-dialogue {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				text-align: center;
+		}
 
     .input-field {
         box-sizing: border-box;
@@ -455,12 +559,6 @@
         justify-content: space-around;
     }
 
-    .label-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
     .attending-dialogue-button {
         margin-top: 10px;
         border: none;
@@ -491,9 +589,9 @@
         margin: 10px;
         padding: 10px 50px;
 
-        box-shadow: 0px 0px 50px -8px rgba(0, 0, 0, 0.75);
-        -webkit-box-shadow: 0px 0px 50px -8px rgba(0, 0, 0, 0.75);
-        -moz-box-shadow: 0px 0px 50px -8px rgba(0, 0, 0, 0.75);
+        box-shadow: 0 0 50px -8px rgba(0, 0, 0, 0.75);
+        -webkit-box-shadow: 0 0 50px -8px rgba(0, 0, 0, 0.75);
+        -moz-box-shadow: 0 0 50px -8px rgba(0, 0, 0, 0.75);
     }
 
     /*
