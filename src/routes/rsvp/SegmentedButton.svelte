@@ -9,112 +9,100 @@
 
 	export let name: string;
 	export let segments: Segment[] = [];
-	export const defaultIndex: number = 1;
+	export let defaultIndex: number = 1;
+	export let callback: (value: string) => void;
 
 	let activeIndex: number = defaultIndex;
 	let boundContainer: HTMLElement;
 	let animate = false;
 
 	onMount(() => {
-		console.log(segments[activeIndex]);
-		animate = true;
-
-		if (segments[activeIndex].bound) {
-			const offsetWidth = segments[activeIndex].bound?.offsetWidth;
-			const offsetLeft = segments[activeIndex].bound?.offsetLeft;
-			console.log(`offsetNew - ${offsetLeft} - ${offsetWidth}`);
-			boundContainer.style.setProperty("--highlight-width", `${offsetWidth}px`);
-			boundContainer.style.setProperty("--highlight-x-pos", `${offsetLeft}px`);
-		}
-	})
+		animateActiveSelection();
+	});
 
 	async function onInputChange(index: number) {
 		activeIndex = index;
+		animate = true;
 		await tick();
 
+		animateActiveSelection();
+		callback(segments[index].value);
+	}
+
+	function animateActiveSelection() {
 		if (segments[activeIndex].bound) {
 			const offsetWidth = segments[activeIndex].bound?.offsetWidth;
 			const offsetLeft = segments[activeIndex].bound?.offsetLeft;
-			console.log(`offsetNew - ${offsetLeft} - ${offsetWidth}`);
-			boundContainer.style.setProperty("--highlight-width", `${offsetWidth}px`);
-			boundContainer.style.setProperty("--highlight-x-pos", `${offsetLeft}px`);
+			boundContainer.style.setProperty('--highlight-width', `${offsetWidth}px`);
+			boundContainer.style.setProperty('--highlight-x-pos', `${offsetLeft}px`);
 		}
-
-		//callback(value, index);
 	}
-
 </script>
 
-<section>
-	<div bind:this={boundContainer} id="controls-container" class="controls-container">
-		<div class:animate class="controls">
-			{#each segments as segment, index (segment.value)}
-				<div
-					id="{String(index)}"
-					class="{`segment ${activeIndex === index ? 'active' : 'inactive'}`}"
-					bind:this={segments[index].bound}
-				>
-					<input
-						type="radio"
-						value={segment.value}
-						id={segment.label}
-						name={name}
-						on:change={() => onInputChange(index)}
-						checked={index === activeIndex}
-					/>
-					<label for="{segment.label}">
-						{segment.label}
-					</label>
-				</div>
-			{/each}
-		</div>
+<div bind:this={boundContainer} id="controls-container" class="controls-container">
+	<div class:animate class={`controls`}>
+		{#each segments as segment, index (segment.value)}
+			<div
+				id="{String(index)}"
+				class="{`segment ${activeIndex === index ? 'active' : 'inactive'}`}"
+				bind:this={segments[index].bound}
+			>
+				<input
+					type="radio"
+					value={segment.value}
+					id={segment.label}
+					name={name}
+					on:change={() => onInputChange(index)}
+					checked={index === activeIndex}
+				/>
+				<label for="{segment.label}">
+					{segment.label}
+				</label>
+			</div>
+		{/each}
 	</div>
-</section>
+</div>
 
 <style>
-		section {
-				color: black
-		}
-
     .controls-container {
+        box-sizing: border-box;
+        color: black;
         --highlight-width: auto;
         --highlight-x-pos: 0;
-
+        height: 100%;
+        width: 100%;
         display: flex;
     }
 
     .controls {
-        display: inline-flex;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
         justify-content: space-between;
-        background: white;
+        background: #dfdfdf;
         box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-        border-radius: 10px;
-        max-width: 500px;
-        padding: 12px;
-        margin: auto;
+        border-radius: 5px;
+        padding: 10px;
         overflow: hidden;
         position: relative;
+        height: 100%;
+        width: 100%;
     }
 
-
     .controls input {
+        box-sizing: border-box;
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        height: 0;
         opacity: 0;
         margin: 0;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        position: absolute;
-        width: 100%;
         cursor: pointer;
-        height: 100%;
     }
 
     .segment {
-        min-width: 120px;
-        position: relative;
+        width: 100%;
         text-align: center;
-        z-index: 1;
     }
 
     .segment label {
@@ -132,8 +120,9 @@
 
     .controls::before {
         content: '';
-        background: #5465FF;
-        border-radius: 8px;
+        background: rgb(143, 7, 7);
+        background: linear-gradient(209deg, rgba(143, 7, 7, 1) 50%, rgb(108, 4, 4) 90%);
+        border-radius: 5px;
         width: var(--highlight-width);
         transform: translateX(var(--highlight-x-pos));
         position: absolute;
@@ -143,7 +132,7 @@
         z-index: 0;
     }
 
-		.animate::before {
+    .controls.animate::before {
         transition: transform 0.3s ease, width 0.3s ease;
-		}
+    }
 </style>
