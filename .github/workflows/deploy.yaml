@@ -28,7 +28,8 @@ jobs:
 
       - name: build
         env:
-          BASE_PATH: '/${{ github.event.repository.name }}'
+          BASE_PATH: "/${{ github.event.repository.name }}"
+          PUBLIC_WEDDING_SERVICE_HOST: "http://localhost:8080"
         run: |
           npm run build
 
