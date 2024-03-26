@@ -13,9 +13,9 @@
 
 		setTimeout(() => {
 				js("#form-container-mask").css({
-					height: "auto"
+					height: "auto",
 				});
-			}, 800
+			}, 800,
 		);
 	};
 
@@ -36,12 +36,8 @@
 		plusOneEnabled: boolean
 	}
 
-	type PutRsvpResponse = {
-		success: boolean
-	}
-
-	type ErrorResponse = {
-		message: string,
+	class ErrorResponse extends Error {
+		messages?: string[];
 	}
 
 	const weddingServiceHost = "localhost:8080";
@@ -51,6 +47,7 @@
 	let loading = false;
 
 	let declined = false;
+	let accepted = false;
 	let retrieved = false;
 	let attending = false;
 
@@ -59,31 +56,30 @@
 	let email = "";
 	let phoneNumber = "";
 	let phoneNumberVisual = "";
-	let foodSelection = "chicken";
+	let foodSelection = "CHICKEN";
 
 	let plusOneEnabled = false;
-	let plusOneSelected = false;
+	let plusOneUsed = false;
 
 	let errorMessage: string | null = null;
+	let errorMessages: string[] | null = null;
 
 	function getRsvp() {
 		loading = true;
 		fetch(`http://${weddingServiceHost}/api/v1/rsvp?` + new URLSearchParams({
 			firstName: firstName,
-			lastName: lastName
+			lastName: lastName,
 		}), {
 			method: "GET",
 			headers: {
-				"Content-Type": "application/json"
-			}
+				"Content-Type": "application/json",
+			},
 		})
 			.then(async response => {
 				if (response.status >= 500) {
 					throw new Error("Something went wrong");
 				} else if (response.status >= 400) {
-					const errorResponse = await response.json() as never as ErrorResponse;
-					console.log(response);
-					throw new Error(errorResponse.message);
+					throw await response.json() as never as ErrorResponse;
 				}
 				return response.json();
 			})
@@ -99,6 +95,7 @@
 				loading = false;
 				retrieved = true;
 				errorMessage = null;
+				errorMessages = null;
 
 				await tick();
 				updateHeightManually(currentContainerMaskHeight);
@@ -120,13 +117,13 @@
 		fetch(`http://${weddingServiceHost}/api/v1/rsvp?`, {
 			method: "PUT",
 			headers: {
-				"Content-Type": "application/json"
+				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({
 				attending: false,
 				firstName: firstName,
-				lastName: lastName
-			})
+				lastName: lastName,
+			}),
 		})
 			.then(async response => {
 				if (response.status >= 500) {
@@ -171,27 +168,25 @@
 
 	function submit() {
 		fetch(`http://${weddingServiceHost}/api/v1/rsvp?`, {
-				method: "PUT",
-				headers: {
-					"Content-Type": "application/json"
-				},
-				body: JSON.stringify({
-					attending: true,
-					firstName: firstName,
-					lastName: lastName,
-					email: email,
-					phoneNumber: phoneNumber,
-					foodSelection: foodSelection,
-					plusOneEnabled: plusOneEnabled,
-				})
+			method: "PUT",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				attending: true,
+				firstName: firstName,
+				lastName: lastName,
+				email: email,
+				phoneNumber: phoneNumber,
+				foodSelection: foodSelection,
+				plusOneUsed: plusOneUsed,
+			}),
 		})
 			.then(async response => {
 				if (response.status >= 500) {
 					throw new Error("Something went wrong");
 				} else if (response.status >= 400) {
-					const errorResponse = await response.json() as never as ErrorResponse;
-					console.log(response);
-					throw new Error(errorResponse.message);
+					throw await response.json() as never as ErrorResponse;
 				}
 				return response.json();
 			})
@@ -200,17 +195,24 @@
 				const currentContainerMaskHeight = formContainerMask.offsetHeight;
 
 				loading = false;
-				declined = true;
+				accepted = true;
 				errorMessage = null;
+				errorMessages = null;
 
 				await tick();
 				updateHeightManually(currentContainerMaskHeight);
 			})
 			.catch(async error => {
 				const currentContainerMaskHeight = formContainerMask.offsetHeight;
+				console.log(error);
 
 				loading = false;
-				errorMessage = error.message;
+
+				if (error.message) {
+					errorMessage = error.message;
+				} else if (error.messages) {
+					errorMessages = error.messages;
+				}
 
 				await tick();
 				updateHeightManually(currentContainerMaskHeight);
@@ -290,7 +292,22 @@
 	}
 
 	function updatePlusOne(value: string): void {
-		plusOneSelected = Boolean(value);
+		plusOneUsed = Boolean(value);
+	}
+
+	function fullNameTitleCase(): string {
+		if (firstName && lastName && lastName.length > 0 && firstName.length > 0) {
+			let restOfFirstName = "";
+			let restOfLastName = "";
+
+			if (firstName.length > 1 && lastName.length > 1) {
+				restOfFirstName = firstName.substring(1);
+				restOfLastName = lastName.substring(1);
+			}
+
+			return `${firstName.charAt(0).toUpperCase()}${restOfFirstName} ${lastName.charAt(0).toUpperCase()}${restOfLastName}`;
+		}
+		return "";
 	}
 </script>
 
@@ -304,7 +321,7 @@
 			{/if}
 			<h1>RSVP</h1>
 			<form class="form-fields" on:submit={submit}>
-				{#if attending || !retrieved}
+				{#if (attending || !retrieved) && !accepted}
 					<input
 						class="input-field"
 						type="text"
@@ -327,34 +344,36 @@
 					/>
 				{/if}
 
-				{#if retrieved && !declined && !attending}
-						<h2 in:fade >Will you be able to accept?</h2>
-						<div in:fade class="attending-dialogue">
-							<input
-								class="attending-dialogue-button"
-								type="button"
-								name="attending-yes"
-								value="Graciously Accept"
-								on:click={confirmAttendance}
-							>
+				{#if retrieved && !declined && !attending && !accepted}
+					<h2 in:fade>Will you be able to accept?</h2>
+					<div in:fade class="attending-dialogue">
+						<button
+							class="submit-button rsvp-response response"
+							type="button"
+							on:click={confirmAttendance}
+						>
+							<span class="name">{fullNameTitleCase()}</span>
+							<span class="status">Joyfully Accepts</span>
+						</button>
 
-							<input
-								class="attending-dialogue-button red"
-								type="button"
-								name="attending-no"
-								value="Regrettably Decline"
-								on:click={sendDecline}
-							>
-						</div>
+						<button
+							class="submit-button rsvp-response negative"
+							type="button"
+							on:click={sendDecline}
+						>
+							<span class="name">{fullNameTitleCase()}</span>
+							<span class="status">Regretfully Declines</span>
+						</button>
+					</div>
 				{/if}
 
-				{#if retrieved && declined}
+				{#if declined || accepted}
 					<div class="declined-dialogue">
 						<h2 in:fade={{duration: 200}}>Thank you, your RSVP has been submitted successfully!</h2>
 					</div>
 				{/if}
 
-				{#if attending}
+				{#if attending && !accepted}
 					<input
 						class="input-field"
 						type="email"
@@ -369,7 +388,7 @@
 						class="input-field"
 						type="text"
 						name="phoneNumber"
-						placeholder="phoneNumber"
+						placeholder="Phone Number"
 						value={phoneNumberVisual}
 						in:fade={{duration:800}}
 						on:input={e => validateNumberInput(e)}
@@ -389,17 +408,17 @@
 								segments={[
 							{
 								label: "Chicken",
-								value: "chicken",
+								value: "CHICKEN",
 								bound: null,
 							},
 							{
 								label: "Beef",
-								value: "beef",
+								value: "BEEF",
 								bound: null,
 							},
 							{
 								label: "Fish",
-								value: "fish",
+								value: "FISH",
 								bound: null,
 							}
 						]}
@@ -442,6 +461,10 @@
 
 				{#if errorMessage}
 					<div in:fade class="error-message">{errorMessage}</div>
+				{:else if errorMessages}
+					{#each errorMessages as message}
+						<div in:fade class="error-message">{message}</div>
+					{/each}
 				{/if}
 			</form>
 		</div>
@@ -506,12 +529,12 @@
         column-gap: 10px;
     }
 
-		.declined-dialogue {
-				display: flex;
-				justify-content: center;
-				align-items: center;
-				text-align: center;
-		}
+    .declined-dialogue {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
 
     .input-field {
         box-sizing: border-box;
@@ -559,26 +582,51 @@
         justify-content: space-around;
     }
 
-    .attending-dialogue-button {
-        margin-top: 10px;
-        border: none;
-        border-radius: 5px;
-        padding: 10px;
-        background: rgb(0, 81, 0);
-        background: linear-gradient(209deg, rgb(0, 81, 0) 50%, rgb(0, 53, 0) 90%);
-    }
-
-    .red {
-        background: rgb(143, 7, 7);
-        background: linear-gradient(209deg, rgba(143, 7, 7, 1) 50%, rgb(108, 4, 4) 90%);
-    }
-
     .submit-button {
         margin-top: 10px;
         border: none;
         background: #cdcdcd;
         border-radius: 5px;
         padding: 10px;
+    }
+
+    .submit-button:hover {
+        cursor: pointer;
+        transform: scale(1.05);
+        transition: 100ms;
+    }
+
+    .rsvp-response {
+        border-radius: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: black;
+        padding: 50px;
+    }
+
+    .response {
+        background: white;
+    }
+
+    .negative {
+        border-color: white;
+        border-style: ridge;
+        border-width: 1px;
+        background: black;
+        color: white;
+    }
+
+    .rsvp-response .name {
+        font-size: max(2vw, 3vh);
+        font-family: Sacramento, serif;
+    }
+
+    .rsvp-response .status {
+        font-size: max(.8vw, 1vh);
+        font-weight: 600;
+        font-style: italic;
     }
 
     .error-message {
