@@ -1,6 +1,4 @@
 <script>
-	export const prerender = true;
-
 	let minuteNow = new Date().getMinutes();
 	console.log(minuteNow);
 </script>

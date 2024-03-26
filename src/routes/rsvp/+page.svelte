@@ -2,9 +2,8 @@
 	import { onMount, tick } from "svelte";
 	import { fade } from "svelte/transition";
 	import js from "jquery";
-	import SegmentedButton from "./SegmentedButton.svelte";
+	import SegmentedButton from "$lib/SegmentedButton.svelte";
 	import { PUBLIC_WEDDING_SERVICE_HOST } from "$env/static/public"
-
 	let formContainerMask: HTMLElement;
 
 	const updateHeightManually = (oldHeight: number) => {
