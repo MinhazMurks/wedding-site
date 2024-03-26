@@ -3,6 +3,7 @@
 	import { fade } from "svelte/transition";
 	import js from "jquery";
 	import SegmentedButton from "./SegmentedButton.svelte";
+	import { PUBLIC_WEDDING_SERVICE_HOST } from "$env/static/public"
 
 	let formContainerMask: HTMLElement;
 
@@ -40,8 +41,6 @@
 		messages?: string[];
 	}
 
-	const weddingServiceHost = "localhost:8080";
-
 	const usNumberFormat = [2, 5];
 
 	let loading = false;
@@ -66,7 +65,7 @@
 
 	function getRsvp() {
 		loading = true;
-		fetch(`http://${weddingServiceHost}/api/v1/rsvp?` + new URLSearchParams({
+		fetch(`${PUBLIC_WEDDING_SERVICE_HOST}/api/v1/rsvp?` + new URLSearchParams({
 			firstName: firstName,
 			lastName: lastName,
 		}), {
@@ -114,7 +113,7 @@
 	function sendDecline() {
 		loading = true;
 
-		fetch(`http://${weddingServiceHost}/api/v1/rsvp?`, {
+		fetch(`${PUBLIC_WEDDING_SERVICE_HOST}/api/v1/rsvp?`, {
 			method: "PUT",
 			headers: {
 				"Content-Type": "application/json",
@@ -167,7 +166,7 @@
 	}
 
 	function submit() {
-		fetch(`http://${weddingServiceHost}/api/v1/rsvp?`, {
+		fetch(`${PUBLIC_WEDDING_SERVICE_HOST}/api/v1/rsvp?`, {
 			method: "PUT",
 			headers: {
 				"Content-Type": "application/json",
