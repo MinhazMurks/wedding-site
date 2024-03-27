@@ -15,7 +15,7 @@
 				<a href="{base}/rsvp">RSVP</a>
 			</li>
 		</ul>
-$	</nav>
+	</nav>
 
 </header>
 
