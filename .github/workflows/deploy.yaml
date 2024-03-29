@@ -29,7 +29,7 @@ jobs:
       - name: build
         env:
           BASE_PATH: "${{ github.event.repository.name }}"
-          PUBLIC_WEDDING_SERVICE_HOST: "testhost"
+          PUBLIC_WEDDING_SERVICE_HOST: "http://testhost.com"
         run: |
           npm run build
 
