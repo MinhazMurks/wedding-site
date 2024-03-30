@@ -33,6 +33,9 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"jquery": "^3.7.1"
+		"@studio-freight/lenis": "^1.0.42",
+		"gsap": "^3.12.5",
+		"jquery": "^3.7.1",
+		"svrollbar": "^0.12.0"
 	}
 }
