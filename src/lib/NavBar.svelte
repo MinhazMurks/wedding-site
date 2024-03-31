@@ -33,6 +33,7 @@
         background: rgb(0, 0, 0);
 				position: fixed;
 				font-size: calc(10px + 2vmin);
+				z-index: 100;
     }
 
     ul {

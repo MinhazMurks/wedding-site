@@ -4,10 +4,14 @@
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
+	let titleContainer: HTMLElement;
+	let jennieNameContainer: HTMLElement;
 	let minhazNameContainer: HTMLElement;
 
 	onMount(() => {
+
 		gsap.registerPlugin(ScrollTrigger);
+
 		const lenis = new Lenis({
 			lerp: 0.1,
 			smoothWheel: true
@@ -22,8 +26,7 @@
 		requestAnimationFrame(raf);
 		lenis.on('scroll', () => ScrollTrigger.update());
 
-		if (minhazNameContainer) {
-
+		if (jennieNameContainer) {
 			initAnims();
 		}
 		return () => lenis.destroy();
@@ -31,34 +34,59 @@
 
 	let minuteNow = new Date().getMinutes();
 
-
 	const initAnims = () => {
+		let titleAnimation = gsap.timeline({
+			scrollTrigger: {
+				trigger: jennieNameContainer,
+				start: "top center",
+				scrub: .5,
+				pin: titleContainer,
+				markers: true,
+				toggleActions: "restart pause resume none"
+			}
+		});
+
+		console.log(`offset width: ${window.outerWidth}`);
+		console.log(`container width: ${jennieNameContainer.offsetWidth}`);
+
+		titleAnimation.set(jennieNameContainer,
+			{
+				x: -1 * window.outerWidth,
+				y: -40
+			}
+		)
+
+		console.log(`container width: ${jennieNameContainer.offsetWidth}`);
 
 		for (let i = 0; i < minhazNameContainer.children.length; i++) {
-			let tl = gsap.timeline();
-			tl.from(
-				minhazNameContainer.children.item(i),
+			titleAnimation.fromTo(minhazNameContainer.children.item(i),
 				{
-					'will-change': 'opacity, transform',
 					opacity: 0,
-					scale: 0.67,
-					delay: (i + 1) * .4,
-				}).to(
-				minhazNameContainer.children.item(i),
+					scale: .6
+				},
 				{
-					ease: 'power4',
 					opacity: 1,
-					scale: 1,
-					delay: (i + 1) * .4,
-					rotation: 0,
-					stagger: 0.4,
-					scrollTrigger: {
-						trigger: minhazNameContainer,
-						start: 'center+=90% bottom',
-						end: '+=20%',
-						scrub: true
-					},
-				});
+					stagger: .3,
+					ease: "elastic.out",
+					scale: 1
+				},
+			)
+		}
+		const currentPosition = titleAnimation.time();
+
+		for (let i = jennieNameContainer.children.length - 1; i >= 0; i--) {
+			titleAnimation.to(jennieNameContainer.children.item(i),
+				{
+					x: window.outerWidth,
+				},
+			);
+
+			titleAnimation.to(jennieNameContainer.children.item(i),
+				{
+					y: 40,
+					ease: "bounce.out",
+				},
+			)
 		}
 
 	}
@@ -70,9 +98,9 @@
 </svelte:head>
 
 <section>
-	<div class="title-container" style="--minute-now: {minuteNow}">
+	<div class="title-container" style="--minute-now: {minuteNow}" bind:this={titleContainer}>
 		<div class="">
-			<div class="front" bind:this={minhazNameContainer}>
+			<div class="header" style="color: white" bind:this={jennieNameContainer}>
 				<span>J</span>
 				<span>e</span>
 				<span>n</span>
@@ -81,8 +109,8 @@
 				<span>e</span>
 			</div>
 		</div>
-		<div class="">
-			<div class="front">
+		<div>
+			<div class="header" style="color: black" bind:this={minhazNameContainer}>
 				<span>M</span>
 				<span>i</span>
 				<span>n</span>
@@ -113,6 +141,15 @@
             /* Modern Browsers */ url('/fonts/gnomon-simple.ttf') format('truetype')
     }
 
+    @font-face {
+        font-family: 'Gnomon';
+        font-style: normal;
+        font-weight: 800;
+        src: url('/fonts/gnomon-foreground.ttf'); /* IE9 Compat Modes */
+        src: local(''),
+            /* Modern Browsers */ url('/fonts/gnomon-foreground.ttf') format('truetype')
+    }
+
     section {
         display: flex;
         flex-direction: column;
@@ -122,18 +159,17 @@
     }
 
     .title-container {
+				margin-top: 500px;
         display: flex;
         justify-content: center;
-        align-items: center;
 				text-align: center;
-        height: 1800px;
+        height: 2000px;
+				column-gap: 30px;
     }
 
-    .front {
-        font-family: 'Gnomon-Simple', serif;
-        font-size: 10em;
-        color: #ffffff;
-        font-variation-settings: "TOTD" 0, "DIST" 0;
+    .header {
+        font-family: 'Gnomon', serif;
+        font-size: 10vw;
 
 				display: flex;
 				flex-direction: row;
@@ -141,15 +177,9 @@
 				align-items: center;
     }
 
-    .shadow {
-        font-family: 'Gnomon-Web', serif;
-        font-size: 10em;
-        position: absolute;
-        color: #000000;
-				font-variation-settings: "TOTD" var(--minute-now), "DIST" 200;
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-    }
+		::selection {
+				background: #000000;
+				color: white;
+				z-index: -1;
+		}
 </style>
