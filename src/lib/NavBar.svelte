@@ -4,8 +4,6 @@
 </script>
 
 <header>
-	<div>
-	</div>
 	<nav>
 		<ul>
 			<li aria-current={$page.url.pathname === '/' ? 'page' : undefined}>
@@ -16,7 +14,6 @@
 			</li>
 		</ul>
 	</nav>
-
 </header>
 
 <style>
@@ -30,8 +27,13 @@
     nav {
         display: flex;
         justify-content: center;
+				align-items: center;
         width: 100vw;
+				height: 10vh;
         background: rgb(0, 0, 0);
+				position: fixed;
+				font-size: calc(10px + 2vmin);
+				z-index: 100;
     }
 
     ul {
@@ -49,18 +51,6 @@
     li {
         position: relative;
         height: 100%;
-    }
-
-    li[aria-current='page']::before {
-        --size: 6px;
-        content: '';
-        width: 0;
-        height: 0;
-        position: absolute;
-        top: 0;
-        left: calc(50% - var(--size));
-        border: var(--size) solid transparent;
-        border-top: var(--size) solid var(--color-theme-1);
     }
 
     nav a {

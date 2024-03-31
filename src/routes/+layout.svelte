@@ -1,34 +1,33 @@
-<script>
+<script lang="ts">
 	import NavBar from '$lib/NavBar.svelte';
 	import './styles.css';
-
+	import { Svrollbar } from "svrollbar";
 </script>
+
 
 <div class="app">
 	<NavBar />
-	<main>
-		<slot />
-	</main>
+		<main>
+				<slot />
+			<Svrollbar />
+		</main>
 </div>
 
 <style>
     .app {
         display: flex;
         flex-direction: column;
-        min-height: 100vh;
+				width: 100vw;
+				min-height: 100vh;
 
         background: rgb(143,7,7);
         background: linear-gradient(209deg, rgba(143,7,7,1) 20%, rgba(78,18,18,1) 75%);
+        --svrollbar-thumb-background: black;
     }
 
+
     main {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        padding: 1rem;
-        width: 100%;
-        max-width: 64rem;
-        margin: 0 auto;
-        box-sizing: border-box;
+        margin-top: 10vh;
+				min-height: 90vh;
     }
 </style>

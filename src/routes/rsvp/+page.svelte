@@ -509,7 +509,7 @@
         align-items: center;
         border-radius: 5px;
         background: #000000;
-        width: 60%;
+        width: max(40%, 500px);
 
         --input-height: 3em;
     }
