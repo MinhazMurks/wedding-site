@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import Lenis from '@studio-freight/lenis';
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -7,9 +7,12 @@
 	let titleContainer: HTMLElement;
 	let jennieNameContainer: HTMLElement;
 	let minhazNameContainer: HTMLElement;
+	let firstInfoSelection: HTMLElement;
+	let pageBodyContainer: HTMLElement;
+
+	let timelines: gsap.core.Timeline[] = [];
 
 	onMount(() => {
-
 		gsap.registerPlugin(ScrollTrigger);
 
 		const lenis = new Lenis({
@@ -30,24 +33,26 @@
 			initAnims();
 		}
 		return () => lenis.destroy();
-	})
+	});
+
+	onDestroy(() => {
+		timelines.forEach(timeline => timeline.killAll());
+	});
 
 	let minuteNow = new Date().getMinutes();
 
 	const initAnims = () => {
 		let titleAnimation = gsap.timeline({
 			scrollTrigger: {
-				trigger: jennieNameContainer,
+				trigger: titleContainer,
 				start: "top center",
+				end: "bottom +=20%",
 				scrub: .5,
-				pin: titleContainer,
+				pin: pageBodyContainer,
 				markers: true,
 				toggleActions: "restart pause resume none"
 			}
 		});
-
-		console.log(`offset width: ${window.outerWidth}`);
-		console.log(`container width: ${jennieNameContainer.offsetWidth}`);
 
 		titleAnimation.set(jennieNameContainer,
 			{
@@ -55,8 +60,6 @@
 				y: -40
 			}
 		)
-
-		console.log(`container width: ${jennieNameContainer.offsetWidth}`);
 
 		for (let i = 0; i < minhazNameContainer.children.length; i++) {
 			titleAnimation.fromTo(minhazNameContainer.children.item(i),
@@ -72,7 +75,6 @@
 				},
 			)
 		}
-		const currentPosition = titleAnimation.time();
 
 		for (let i = jennieNameContainer.children.length - 1; i >= 0; i--) {
 			titleAnimation.to(jennieNameContainer.children.item(i),
@@ -88,7 +90,6 @@
 				},
 			)
 		}
-
 	}
 </script>
 
@@ -97,30 +98,66 @@
 	<meta name="description" content="Minnie Wedding" />
 </svelte:head>
 
-<section>
-	<div class="title-container" style="--minute-now: {minuteNow}" bind:this={titleContainer}>
-		<div class="">
-			<div class="header" style="color: white" bind:this={jennieNameContainer}>
-				<span>J</span>
-				<span>e</span>
-				<span>n</span>
-				<span>n</span>
-				<span>i</span>
-				<span>e</span>
+<div>
+	<div class="page-body-container" bind:this={pageBodyContainer}>
+		<div class="first-info-section" bind:this={firstInfoSelection}>
+			<div class="title-container" style="--minute-now: {minuteNow}" bind:this={titleContainer}>
+				<div class="">
+					<div class="header" style="color: white" bind:this={jennieNameContainer}>
+						<span>J</span>
+						<span>e</span>
+						<span>n</span>
+						<span>n</span>
+						<span>i</span>
+						<span>e</span>
+					</div>
+				</div>
+				<div>
+					<div class="header" style="color: black" bind:this={minhazNameContainer}>
+						<span>M</span>
+						<span>i</span>
+						<span>n</span>
+						<span>h</span>
+						<span>a</span>
+						<span>z</span>
+					</div>
+				</div>
 			</div>
-		</div>
-		<div>
-			<div class="header" style="color: black" bind:this={minhazNameContainer}>
-				<span>M</span>
-				<span>i</span>
-				<span>n</span>
-				<span>h</span>
-				<span>a</span>
-				<span>z</span>
+			<div class="info-body">
+				<p>
+					We are delighted to welcome you to our wedding celebration! On this website,
+					you'll find all the information you need to join us in commemorating our love
+					and union. Feel free to explore for details on the ceremony, reception, accommodations,
+					and more. We can't wait to share this special day with you!
+				</p>
+			</div>
+			<div class="info-body">
+				<p>
+					We are delighted to welcome you to our wedding celebration! On this website,
+					you'll find all the information you need to join us in commemorating our love
+					and union. Feel free to explore for details on the ceremony, reception, accommodations,
+					and more. We can't wait to share this special day with you!
+				</p>
+			</div>
+			<div class="info-body">
+				<p>
+					We are delighted to welcome you to our wedding celebration! On this website,
+					you'll find all the information you need to join us in commemorating our love
+					and union. Feel free to explore for details on the ceremony, reception, accommodations,
+					and more. We can't wait to share this special day with you!
+				</p>
+			</div>
+			<div class="info-body">
+				<p>
+					We are delighted to welcome you to our wedding celebration! On this website,
+					you'll find all the information you need to join us in commemorating our love
+					and union. Feel free to explore for details on the ceremony, reception, accommodations,
+					and more. We can't wait to share this special day with you!
+				</p>
 			</div>
 		</div>
 	</div>
-</section>
+</div>
 
 <style>
     @font-face {
@@ -150,12 +187,12 @@
             /* Modern Browsers */ url('/fonts/gnomon-foreground.ttf') format('truetype')
     }
 
-    section {
+    .page-body-container {
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        flex: 0.6;
+				width: 100%;
     }
 
     .title-container {
@@ -163,7 +200,6 @@
         display: flex;
         justify-content: center;
 				text-align: center;
-        height: 2000px;
 				column-gap: 30px;
     }
 
@@ -181,5 +217,23 @@
 				background: #000000;
 				color: white;
 				z-index: -1;
+		}
+
+		.first-info-section {
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+		}
+
+		.info-body {
+				margin-left: 30px;
+				margin-right: 30px;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				text-align: center;
+				font-family: Jost, sans-serif;
+				font-size: 2vw;
 		}
 </style>

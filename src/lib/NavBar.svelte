@@ -9,6 +9,9 @@
 			<li aria-current={$page.url.pathname === '/' ? 'page' : undefined}>
 				<a href="{base}/">Home</a>
 			</li>
+			<li aria-current={$page.url.pathname === '/places' ? 'page' : undefined}>
+				<a href="{base}/places">Destination</a>
+			</li>
 			<li aria-current={$page.url.pathname === '/rsvp' ? 'page' : undefined}>
 				<a href="{base}/rsvp">RSVP</a>
 			</li>
@@ -69,5 +72,9 @@
 
     a:hover {
         color: var(--color-theme-1);
+    }
+
+    [aria-current]:not([aria-current="false"]) {
+        font-weight: bold;
     }
 </style>

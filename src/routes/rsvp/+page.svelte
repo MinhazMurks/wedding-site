@@ -309,7 +309,7 @@
 	}
 </script>
 
-<section>
+<div class="rsvp-page-container">
 	<div bind:this={formContainerMask} id="form-container-mask" class="form-container-mask">
 		<div id="form-container" class="form-container" class:loading>
 			{#if loading}
@@ -467,10 +467,10 @@
 			</form>
 		</div>
 	</div>
-</section>
+</div>
 
 <style>
-    section {
+    .rsvp-page-container {
         display: flex;
         justify-content: center;
         align-items: center;
@@ -494,6 +494,7 @@
     }
 
     .form-container-mask {
+				padding: 10px;
         width: 100%;
         display: flex;
         justify-content: center;
@@ -510,6 +511,7 @@
         border-radius: 5px;
         background: #000000;
         width: max(40%, 500px);
+				max-width: 600px;
 
         --input-height: 3em;
     }
