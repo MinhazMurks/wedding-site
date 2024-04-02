@@ -4,6 +4,9 @@
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
+	let header1: HTMLElement;
+	let header2: HTMLElement;
+
 	let titleContainer: HTMLElement;
 	let jennieNameContainer: HTMLElement;
 	let minhazNameContainer: HTMLElement;
@@ -42,6 +45,25 @@
 	let minuteNow = new Date().getMinutes();
 
 	const initAnims = () => {
+
+		gsap.from(header1, {
+			opacity: 0,
+			x: 20,
+			y: 20,
+			ease: "power1.inOut",
+			duration: 1
+		});
+
+		gsap.from(header2, {
+			opacity: 0,
+			x: 20,
+			y: 20,
+			ease: "power1.inOut",
+			duration: 1,
+			delay: 1
+		});
+
+
 		let titleAnimation = gsap.timeline({
 			scrollTrigger: {
 				trigger: titleContainer,
@@ -102,10 +124,10 @@
 <div class="home-page-container">
 	<div class="page-body-container" bind:this={pageBodyContainer}>
 		<div>
-			<h1 class="title">
+			<h1 class="title" bind:this={header1}>
 				We would like to announce...
 			</h1>
-			<h1 class="title">
+			<h1 class="title" bind:this={header2}>
 				The wedding of...
 			</h1>
 		</div>
@@ -132,30 +154,6 @@
 						<span>z</span>
 					</div>
 				</div>
-			</div>
-			<div class="info-body">
-				<p>
-					We are delighted to welcome you to our wedding celebration! On this website,
-					you'll find all the information you need to join us in commemorating our love
-					and union. Feel free to explore for details on the ceremony, reception, accommodations,
-					and more. We can't wait to share this special day with you!
-				</p>
-			</div>
-			<div class="info-body">
-				<p>
-					We are delighted to welcome you to our wedding celebration! On this website,
-					you'll find all the information you need to join us in commemorating our love
-					and union. Feel free to explore for details on the ceremony, reception, accommodations,
-					and more. We can't wait to share this special day with you!
-				</p>
-			</div>
-			<div class="info-body">
-				<p>
-					We are delighted to welcome you to our wedding celebration! On this website,
-					you'll find all the information you need to join us in commemorating our love
-					and union. Feel free to explore for details on the ceremony, reception, accommodations,
-					and more. We can't wait to share this special day with you!
-				</p>
 			</div>
 			<div class="info-body">
 				<p>

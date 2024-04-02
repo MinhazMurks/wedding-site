@@ -12,19 +12,13 @@
 	const accordionEasing = "ease-in-out";
 
 	let loading = false;
+	let pinnedTitle: HTMLElement;
 	let openedAccordion: PlaceCategory | null;
 	let places: Map<PlaceCategory, PlaceData[]> = new Map();
 
+	let animations: gsap.core.Tween[] = [];
 
 	let scrollbarContainer: HTMLElement;
-	let section1: HTMLElement;
-	let image1: HTMLElement;
-	let section2: HTMLElement;
-	let image2: HTMLElement;
-	let section3: HTMLElement;
-	let image3: HTMLElement;
-	let section4: HTMLElement;
-	let image4: HTMLElement;
 
 	onMount(() => {
 		gsap.registerPlugin(ScrollTrigger);
@@ -46,36 +40,49 @@
 		lenis.on("scroll", () => ScrollTrigger.update());
 
 		if (scrollbarContainer) {
-			initScrollTrigges();
+			initScrollTriggers();
 		}
 		return () => lenis.destroy();
 	});
 
-	const initScrollTrigges = () => {
-		let getRatio = el: HtmlElement => window.innerHeight / (window.innerHeight + el.offsetHeight);
+	onDestroy(() => {
+		animations.map(animation => animation.kill());
+	});
 
-		gsap.utils.toArray("section").forEach((section, i) => {
-			section.bg = section.querySelector(".bg");
+	const initScrollTriggers = () => {
+		gsap.to(pinnedTitle, {
+				scrollTrigger: {
+					pin: true,
+					trigger: pinnedTitle,
+					start: "top +=20%",
+					end: `${window.outerHeight * 3} +=45%`,
+					invalidateOnRefresh: true, // to make it responsive
+				},
+			},
+		);
+
+		gsap.utils.toArray("section").forEach((section: unknown, i) => {
+			let sectionElement = section as HTMLElement;
+			let background: HTMLElement = sectionElement.querySelector(".bg")!;
 
 			// Give the backgrounds some random images
-			section.bg.style.backgroundImage = `url(https://picsum.photos/1600/800?random=${i})`;
+			//background!.style.backgroundImage = `url(https://picsum.photos/1600/800?random=${i})`;
 
 			// the first image (i === 0) should be handled differently because it should start at the very top.
 			// use function-based values in order to keep things responsive
-			gsap.fromTo(section.bg, {
-				backgroundPosition: () => i ? `50% ${-window.innerHeight * getRatio(section)}px` : "50% 0px",
+			animations.push(gsap.fromTo(background, {
+				backgroundPosition: () => i ? `50% ${-window.innerHeight * getRatio(sectionElement)}px` : "50% 0px",
 			}, {
-				backgroundPosition: () => `50% ${window.innerHeight * (1 - getRatio(section))}px`,
+				backgroundPosition: () => `50% ${window.innerHeight * (1 - getRatio(sectionElement))}px`,
 				ease: "none",
 				scrollTrigger: {
-					trigger: section,
+					trigger: sectionElement,
 					start: () => i ? "top bottom" : "top top",
 					end: "bottom top",
 					scrub: true,
 					invalidateOnRefresh: true, // to make it responsive
 				},
-			});
-
+			}));
 		});
 	};
 
@@ -135,33 +142,31 @@
 		}
 		return phoneNumber;
 	};
+
+	const getRatio = (element: Element) => {
+		return window.innerHeight / (window.innerHeight + element.clientHeight);
+	};
 </script>
 
 <div class="places-page-container">
+	<div class="main-title-container" bind:this={pinnedTitle}>
+		<h1>The Venue</h1>
+	</div>
 	<div class="scrollbar-container" bind:this={scrollbarContainer}>
 		<section>
-			<div class="bg"></div>
-			<h1>Simple parallax sections</h1>
+			<div class="bg bg-image-1"></div>
 		</section>
 		<section>
-			<div class="bg"></div>
-			<h1>Hey look, a title</h1>
+			<div class="bg bg-image-2"></div>
 		</section>
 		<section>
-			<div class="bg"></div>
-			<h1>They just keep coming</h1>
-		</section>
-		<section>
-			<div class="bg"></div>
-			<h1>So smooth though</h1>
-		</section>
-		<section>
-			<div class="bg"></div>
-			<h1>Nice, right?</h1>
+			<div class="bg bg-image-3"></div>
 		</section>
 	</div>
-	<div class="places-title-container">
-		<h1>The Venue</h1>
+	<div class="main-body-container">
+		<p>We have chosen The Black Barn for our wedding venue. The Black Barn is a beautiful rustic but modern venue.
+			Located away from the main Orlando area, it boasts 5 acres of agricultural land. The Black Barn has both beautiful
+			greenery and modern architecture allowing us to enjoy the best of both worlds</p>
 	</div>
 	<div class="places-title-container">
 		<h1>Nearby</h1>
@@ -247,8 +252,35 @@
         height: 100%;
     }
 
+    .main-title-container {
+        width: 100%;
+        z-index: 1;
+        position: absolute;
+        text-align: center;
+    }
+
+    .main-title-container h1 {
+        isolation: isolate;
+        font-family: "Parisienne", cursive;
+        font-size: 4.5rem;
+        color: white;
+    }
+
     .scrollbar-container {
         height: 100vh;
+        margin-bottom: 200vh;
+    }
+
+    .bg-image-1 {
+        background: url("/black-barn-ceremony-hall.jpg");
+    }
+
+    .bg-image-2 {
+        background: url("/black-barn-reception-hall.jpg");
+    }
+
+    .bg-image-3 {
+        background: url("/window-hall.jpg");
     }
 
     .scrollbar-container section {
@@ -265,20 +297,20 @@
         left: 0;
         width: 100%;
         height: 100%;
-        z-index: -1;
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
     }
 
-    .scrollbar-container h1 {
-        color: white;
-        text-shadow: 1px 1px 3px black;
-        z-index: 1;
-        font-size: 3em;
-        font-weight: 400;
+    .main-body-container {
+        align-self: center;
+        display: flex;
+        width: 100%;
+        font-family: Jost, sans-serif;
+        text-align: center;
+        max-width: max(600px, 50vw);
+        font-size: 1.5rem;
     }
-
 
     .places-title-container {
         display: flex;
