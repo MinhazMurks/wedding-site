@@ -45,8 +45,9 @@
 		let titleAnimation = gsap.timeline({
 			scrollTrigger: {
 				trigger: titleContainer,
-				start: "top center",
-				end: "bottom +=20%",
+				start: "top 200",
+				end: "bottom 200",
+				pinSpacing: false,
 				scrub: .5,
 				pin: pageBodyContainer,
 				markers: true,
@@ -98,8 +99,17 @@
 	<meta name="description" content="Minnie Wedding" />
 </svelte:head>
 
-<div>
+<div class="home-page-container">
 	<div class="page-body-container" bind:this={pageBodyContainer}>
+		<div>
+			<h1 class="title">
+				We would like to announce...
+			</h1>
+			<h1 class="title">
+				The wedding of...
+			</h1>
+		</div>
+
 		<div class="first-info-section" bind:this={firstInfoSelection}>
 			<div class="title-container" style="--minute-now: {minuteNow}" bind:this={titleContainer}>
 				<div class="">
@@ -187,7 +197,17 @@
             /* Modern Browsers */ url('/fonts/gnomon-foreground.ttf') format('truetype')
     }
 
+		.home-page-container {
+        height: 200vh;
+		}
+
+		.title {
+        font-family: "Parisienne", cursive;
+				font-size: max(4vw, 3.5em);
+		}
+
     .page-body-container {
+        margin-top: 10vh;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -196,11 +216,11 @@
     }
 
     .title-container {
-				margin-top: 500px;
         display: flex;
         justify-content: center;
 				text-align: center;
 				column-gap: 30px;
+				max-height: 300px;
     }
 
     .header {
@@ -227,13 +247,13 @@
 		}
 
 		.info-body {
-				margin-left: 30px;
-				margin-right: 30px;
+				padding: 10px;
 				display: flex;
 				justify-content: center;
 				align-items: center;
 				text-align: center;
 				font-family: Jost, sans-serif;
-				font-size: 2vw;
+				font-size: min(2em, 5vw);
+				max-width: max(600px, 40vw);
 		}
 </style>

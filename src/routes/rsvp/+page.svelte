@@ -3,7 +3,9 @@
 	import { fade } from "svelte/transition";
 	import js from "jquery";
 	import SegmentedButton from "$lib/SegmentedButton.svelte";
-	import { PUBLIC_WEDDING_SERVICE_HOST } from "$env/static/public"
+	import { PUBLIC_WEDDING_SERVICE_HOST } from "$env/static/public";
+	import type { GetRsvpResponse } from "$lib/types/Responses";
+
 	let formContainerMask: HTMLElement;
 
 	const updateHeightManually = (oldHeight: number) => {
@@ -28,12 +30,6 @@
 		INSERT_FROM_PASTE = "insertFromPaste",
 		DELETE_BACKWARD = "deleteContentBackward",
 		DELETE_FORWARD = "deleteContentForward",
-	}
-
-	type GetRsvpResponse = {
-		firstName: string,
-		lastName: string,
-		plusOneEnabled: boolean
 	}
 
 	class ErrorResponse extends Error {
@@ -494,7 +490,7 @@
     }
 
     .form-container-mask {
-				padding: 10px;
+        padding: 10px;
         width: 100%;
         display: flex;
         justify-content: center;
@@ -511,7 +507,7 @@
         border-radius: 5px;
         background: #000000;
         width: max(40%, 500px);
-				max-width: 600px;
+        max-width: 600px;
 
         --input-height: 3em;
     }
@@ -620,7 +616,7 @@
 
     .rsvp-response .name {
         font-size: max(2vw, 3vh);
-        font-family: Sacramento, serif;
+        font-family: "Parisienne", cursive;
     }
 
     .rsvp-response .status {
