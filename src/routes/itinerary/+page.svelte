@@ -52,7 +52,7 @@
 	}
 </script>
 
-<div>
+<div class="itinerary-page">
 	<div class="itinerary-body">
 		<h1 bind:this={title}>Itinerary</h1>
 		<p bind:this={body}>Please check back here closer to the wedding date for more updated information!</p>
@@ -60,6 +60,13 @@
 </div>
 
 <style>
+    .itinerary-page {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
     .itinerary-body {
         padding: 10px;
         display: flex;
