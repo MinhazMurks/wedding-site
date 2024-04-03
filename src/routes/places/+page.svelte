@@ -92,7 +92,6 @@
 
 	function getPlaces(): void {
 		loading = true;
-		console.log("Loading...");
 		fetch(`${PUBLIC_WEDDING_SERVICE_HOST}/api/v1/place/all`, {
 			method: "GET",
 			headers: {
@@ -150,16 +149,16 @@
 <div class="places-page-container">
 	<div class="places-title-container" bind:this={placesTitleContainer}>
 		<h1>The Venue</h1>
-		<div class="places-content-item-info" style="align-self: center">
+		<div class="places-content-item-info" style="align-self: center; font-size: min(1.6rem, 4.5vw);">
 			<MapPinIcon />
 			<span><a href="{getMapLink('2017 Gregory Rd, Orlando, FL 32825')}" target="_blank"
 							 rel="noopener noreferrer">2017 Gregory Rd, Orlando, FL 32825</a></span>
 		</div>
 	</div>
 	<div class="main-body-container" bind:this={mainBodyContainer}>
-		<p>We have chosen The Black Barn for our wedding venue. The Black Barn is a beautiful rustic but modern venue.
+		<span>We have chosen The Black Barn for our wedding venue. The Black Barn is a beautiful rustic but modern venue.
 			Located away from the main Orlando area, it boasts 5 acres of agricultural land. The Black Barn has both beautiful
-			greenery and modern architecture allowing us to enjoy the best of both worlds.</p>
+			greenery and modern architecture allowing us to enjoy the best of both worlds.</span>
 	</div>
 	<div class="places-title-container" bind:this={nearbyTitleContainer}>
 		<h1>Nearby</h1>
@@ -243,6 +242,7 @@
         display: flex;
         flex-direction: column;
         height: 100%;
+        font-family: Jost, sans-serif;
     }
 
     .places-title-container {
@@ -254,17 +254,21 @@
 
     .places-title-container h1 {
         font-family: "Parisienne", cursive;
-        font-size: 4.5rem;
+        font-size: max(3vw, 4.5rem);
     }
 
     .main-body-container {
         align-self: center;
         display: flex;
-        width: 100%;
         font-family: Jost, sans-serif;
         text-align: center;
         max-width: max(600px, 50vw);
-        font-size: min(2em, 5vw);
+        font-size: min(1.6rem, 4.5vw);
+        padding: 10px;
+    }
+
+    .main-body-container span {
+        padding: 20px;
     }
 
     .places-accordion-container {

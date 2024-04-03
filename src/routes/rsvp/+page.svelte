@@ -80,10 +80,6 @@
 	}
 
 	function updateHeightManually(oldHeight: number) {
-		console.log(`oldHeight: ${oldHeight}`);
-		console.log(`newHeight: ${formContainer.offsetHeight}`);
-		console.log(`formContainerMask: ${formContainerMask}`);
-
 		const timeline = gsap.timeline();
 
 		if (oldHeight > formContainer.offsetHeight) {
@@ -176,15 +172,12 @@
 					throw new Error("Something went wrong");
 				} else if (response.status >= 400) {
 					const errorResponse = await response.json() as never as ErrorResponse;
-					console.log(response);
 					throw new Error(errorResponse.message);
 				}
 				return response.json();
 			})
 			.then(async () => {
 				const currentContainerMaskHeight = formContainerMask.offsetHeight;
-
-				console.log("happy path");
 
 				loading = false;
 				declined = true;
@@ -251,14 +244,15 @@
 			})
 			.catch(async error => {
 				const currentContainerMaskHeight = formContainerMask.offsetHeight;
-				console.log(error);
 
 				loading = false;
 
 				if (error.message) {
 					errorMessage = error.message;
+					console.log(error.message);
 				} else if (error.messages) {
 					errorMessages = error.messages;
+					console.log(error.messages);
 				}
 
 				await tick();
@@ -277,7 +271,6 @@
 	}
 
 	function validateEmail(event: Event) {
-		console.log("validateEmail", event);
 	}
 
 	function validateNumberInput(event: Event) {
@@ -289,10 +282,6 @@
 		switch (inputEvent.inputType) {
 			case InputType.INSERT_FROM_PASTE:
 			case InputType.INSERT:
-				console.log(`"match: ${newCharacter?.match(/\d/)}`);
-				console.log(phoneNumber.length);
-
-
 				if (phoneNumber.length < 10) {
 					if (newCharacter && newCharacter.match(/\d/)) {
 						phoneNumber += newCharacter;

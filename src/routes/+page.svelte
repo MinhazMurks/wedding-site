@@ -83,7 +83,7 @@
 			scrollTrigger: {
 				trigger: titleContainer,
 				start: "top 200",
-				end: "+=200% 200",
+				end: "+=180% 200",
 				pinSpacing: false,
 				pin: pageBodyContainer,
 				onEnter: () => activateScrollDialogue(false)
@@ -151,18 +151,17 @@
 	}
 
 	function activateScrollDialogue(show: boolean) {
-		console.log("in here")
 		if (show) {
 			gsap.to(scrollDialogueContainer, {
 				opacity: 1,
 				ease: "power1.inOut",
 			})
 		} else {
-			scrollDialogueTimeline.kill();
 			gsap.to(scrollDialogueContainer, {
 				opacity: 0,
 				ease: "power1.inOut",
 			})
+			scrollDialogueTimeline.kill();
 		}
 	}
 </script>
@@ -176,9 +175,9 @@
 	<div class="page-body-container" bind:this={pageBodyContainer}>
 		<div>
 			<h1 class="title" bind:this={header1}>
-				We would like to announce...
+				Announcing...
 			</h1>
-			<h1 class="title" bind:this={header2}>
+			<h1 class="title-2" bind:this={header2}>
 				The wedding of...
 			</h1>
 		</div>
@@ -213,18 +212,18 @@
 				<h2>
 					9.12.24
 				</h2>
-				<p>
+				<span>
 					We are delighted to welcome you to our wedding celebration! On this website,
 					you'll find all the information you need to join us in commemorating our love
 					and union. Feel free to explore for details on the ceremony, reception, accommodations,
 					and more. We can't wait to share this special day with you!
-				</p>
-				<p>
+				</span>
+				<span>
 					You will find all information pertaining to the wedding here. To find out more about the venue and what's nearby, head to the <span><a href="{base}/places">Destination</a></span> tab.
 					If you want to check out the registry, head to the <span><a href="{base}/registry">Registry</a></span> tab.
 					Want to RSVP? Head to the <span><a href="{base}/rsvp">RSVP</a></span> tab.
 					If you have any questions, scroll down to the contact form below to email us!
-				</p>
+				</span>
 			</div>
 		</div>
 	</div>
@@ -270,8 +269,13 @@
 
 		.title {
         font-family: "Parisienne", cursive;
-				font-size: max(4vw, 3.5em);
+        font-size: max(5vw, 4.5rem);
 		}
+
+    .title-2 {
+        font-family: "Parisienne", cursive;
+        font-size: max(4vw, 3.5rem);
+    }
 
     .page-body-container {
         margin-top: 10vh;
@@ -292,7 +296,7 @@
 
     .header {
         font-family: 'Gnomon', serif;
-        font-size: max(3.8em, 12vw);
+        font-size: max(3rem, 10vw);
 
 				display: flex;
 				flex-direction: row;
@@ -302,7 +306,8 @@
 
 		.header-plus {
 				font-family: "Parisienne", cursive;
-        font-size: 7vw;
+        font-size: min(5rem, 6vw);
+				align-self: center;
 		}
 
 		::selection {
@@ -333,9 +338,10 @@
         font-size: min(4em, 10vw);
 		}
 
-		.info-body p{
+		.info-body span{
         font-family: Jost, sans-serif;
-        font-size: min(2em, 5vw);
+        font-size: min(1.6rem, 4.5vw);
+				padding: 20px;
 		}
 
 		.scroll-dialogue {

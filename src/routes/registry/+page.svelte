@@ -43,6 +43,14 @@
 			ease: "power1.inOut",
 		});
 
+		pageTimeline.from(registryInfo, {
+			opacity: 0,
+			scale: .9,
+			x: -10,
+			y: -10,
+			ease: "power1.inOut",
+		});
+
 		for (let bodySection of registryBody.children) {
 			pageTimeline.from(bodySection, {
 				opacity: 0,
@@ -59,21 +67,17 @@
 			y: 20,
 			ease: "power1.inOut",
 		});
-
-		pageTimeline.from(registryInfo, {
-			opacity: 0,
-			scale: .9,
-			x: -10,
-			y: -10,
-			ease: "power1.inOut",
-		});
 	}
 </script>
 
 <div class="registry-container" bind:this={registryTitle}>
 	<h1>
-		Welcome to our wedding registry!
+		Our Registry
 	</h1>
+	<div class="registry-info-item" bind:this={registryInfo}>
+		<ShoppingCartIcon />
+		<span><a href="https://www.amazon.com/wedding/share/Jen-And-Haz" target="_blank" rel="noopener noreferrer">Visit Amazon Registry</a></span>
+	</div>
 	<div class="registry-body" bind:this={registryBody}>
 		<span>
 			We are incredibly grateful for your presence in our lives and for your love and support as we embark on this
@@ -95,10 +99,6 @@
 	<h1 bind:this={registrySignature}>
 		Jennie and Minhaz
 	</h1>
-	<div class="registry-info-item" bind:this={registryInfo}>
-		<ShoppingCartIcon />
-		<span><a href="https://www.amazon.com/wedding/share/Jen-And-Haz" target="_blank" rel="noopener noreferrer">Visit Amazon Registry</a></span>
-	</div>
 </div>
 
 <style>
@@ -115,7 +115,7 @@
         font-family: Jost, sans-serif;
         text-align: center;
         max-width: max(600px, 50vw);
-        font-size: min(1.5rem, 5vw);
+        font-size: min(1.6rem, 4.5vw);
         padding: 10px;
     }
 
@@ -125,7 +125,7 @@
 
     .registry-container h1 {
         font-family: "Parisienne", cursive;
-        font-size: min(4.5rem, 10vw);
+        font-size: max(3vw, 4.5rem);
     }
 
     .registry-info-item {
@@ -134,7 +134,7 @@
         font-family: Jost, sans-serif;
         text-align: center;
         max-width: max(600px, 50vw);
-        font-size: min(1.5rem, 5vw);
+        font-size: min(1.6rem, 4.5vw);
         column-gap: 10px;
         margin-bottom: 10px;
     }

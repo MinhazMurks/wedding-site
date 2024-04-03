@@ -1,10 +1,8 @@
 <script lang="ts">
-
 	import { onMount } from "svelte";
+	import Lenis from "@studio-freight/lenis";
 	import { gsap } from "gsap";
 	import { ScrollTrigger } from "gsap/ScrollTrigger";
-	import Lenis from "@studio-freight/lenis";
-
 
 	let title: HTMLElement;
 	let body: HTMLElement;
@@ -55,7 +53,7 @@
 <div class="itinerary-page">
 	<div class="itinerary-body">
 		<h1 bind:this={title}>Itinerary</h1>
-		<p bind:this={body}>Please check back here closer to the wedding date for more updated information!</p>
+		<span bind:this={body}>Please check back here closer to the wedding date for more updated information!</span>
 	</div>
 </div>
 
@@ -79,11 +77,12 @@
 
     .itinerary-body h1 {
         font-family: "Parisienne", cursive;
-        font-size: 4.5rem;
+        font-size: max(3vw, 4.5rem);
     }
 
-    .itinerary-body p {
+    .itinerary-body span {
         font-family: Jost, sans-serif;
-        font-size: min(2em, 5vw);
+        font-size: min(1.6rem, 4.5vw);
+        padding: 20px;
     }
 </style>

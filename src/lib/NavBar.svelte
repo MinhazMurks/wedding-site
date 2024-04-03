@@ -2,9 +2,6 @@
 	import { page } from "$app/stores";
 	import { base } from "$app/paths";
 
-	const getSelected = (page: string): string => {
-		return $page.url.pathname === `/${page}` ? "selected" : "";
-	};
 </script>
 
 <header>
