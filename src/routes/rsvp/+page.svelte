@@ -3,24 +3,38 @@
 	import { fade } from "svelte/transition";
 	import js from "jquery";
 	import SegmentedButton from "$lib/SegmentedButton.svelte";
-	import { PUBLIC_WEDDING_SERVICE_HOST } from "$env/static/public"
+	import { PUBLIC_WEDDING_SERVICE_HOST } from "$env/static/public";
+	import type { GetRsvpResponse } from "$lib/types/Responses";
+	import { gsap } from "gsap";
+	import { ScrollTrigger } from "gsap/ScrollTrigger";
+	import Lenis from "@studio-freight/lenis";
+
 	let formContainerMask: HTMLElement;
-
-	const updateHeightManually = (oldHeight: number) => {
-		const formContainerHeight = js("#form-container").outerHeight(true) || 0;
-		js("#form-container-mask").outerHeight(oldHeight);
-		js("#form-container-mask").outerHeight(formContainerHeight);
-
-		setTimeout(() => {
-				js("#form-container-mask").css({
-					height: "auto",
-				});
-			}, 800,
-		);
-	};
+	let formContainer: HTMLElement;
 
 	onMount(() => {
 		window.js = js;
+
+		gsap.registerPlugin(ScrollTrigger);
+
+		const lenis = new Lenis({
+			lerp: 0.1,
+			smoothWheel: true,
+		});
+
+		function raf(time: number) {
+			if (lenis) {
+				lenis.raf(time);
+				requestAnimationFrame(raf);
+			}
+		}
+
+		requestAnimationFrame(raf);
+		lenis.on("scroll", () => ScrollTrigger.update());
+
+		initAnims();
+
+		return () => lenis.destroy();
 	});
 
 	enum InputType {
@@ -28,12 +42,6 @@
 		INSERT_FROM_PASTE = "insertFromPaste",
 		DELETE_BACKWARD = "deleteContentBackward",
 		DELETE_FORWARD = "deleteContentForward",
-	}
-
-	type GetRsvpResponse = {
-		firstName: string,
-		lastName: string,
-		plusOneEnabled: boolean
 	}
 
 	class ErrorResponse extends Error {
@@ -61,6 +69,42 @@
 
 	let errorMessage: string | null = null;
 	let errorMessages: string[] | null = null;
+
+	function initAnims() {
+		gsap.from(formContainerMask, {
+			opacity: 0,
+			y: 50,
+			ease: "power2.inOut",
+			duration: .8,
+		});
+	}
+
+	function updateHeightManually(oldHeight: number) {
+		const timeline = gsap.timeline();
+
+		if (oldHeight > formContainer.offsetHeight) {
+			timeline.set(
+				formContainer,
+				{
+					height: oldHeight,
+				},
+			).to(formContainer,
+				{
+					height: formContainer.offsetHeight,
+				});
+		} else {
+			timeline.set(
+				formContainerMask,
+				{
+					height: oldHeight,
+				},
+			).to(formContainerMask,
+				{
+					height: formContainer.offsetHeight + 20,
+				});
+		}
+
+	};
 
 	function getRsvp() {
 		loading = true;
@@ -128,13 +172,11 @@
 					throw new Error("Something went wrong");
 				} else if (response.status >= 400) {
 					const errorResponse = await response.json() as never as ErrorResponse;
-					console.log(response);
 					throw new Error(errorResponse.message);
 				}
 				return response.json();
 			})
 			.then(async () => {
-
 				const currentContainerMaskHeight = formContainerMask.offsetHeight;
 
 				loading = false;
@@ -202,14 +244,15 @@
 			})
 			.catch(async error => {
 				const currentContainerMaskHeight = formContainerMask.offsetHeight;
-				console.log(error);
 
 				loading = false;
 
 				if (error.message) {
 					errorMessage = error.message;
+					console.log(error.message);
 				} else if (error.messages) {
 					errorMessages = error.messages;
+					console.log(error.messages);
 				}
 
 				await tick();
@@ -228,7 +271,6 @@
 	}
 
 	function validateEmail(event: Event) {
-		console.log("validateEmail", event);
 	}
 
 	function validateNumberInput(event: Event) {
@@ -240,10 +282,6 @@
 		switch (inputEvent.inputType) {
 			case InputType.INSERT_FROM_PASTE:
 			case InputType.INSERT:
-				console.log(`"match: ${newCharacter?.match(/\d/)}`);
-				console.log(phoneNumber.length);
-
-
 				if (phoneNumber.length < 10) {
 					if (newCharacter && newCharacter.match(/\d/)) {
 						phoneNumber += newCharacter;
@@ -309,16 +347,16 @@
 	}
 </script>
 
-<section>
+<div class="rsvp-page-container">
 	<div bind:this={formContainerMask} id="form-container-mask" class="form-container-mask">
-		<div id="form-container" class="form-container" class:loading>
+		<div id="form-container" class="form-container" class:loading bind:this={formContainer}>
 			{#if loading}
 				<div transition:fade={{duration: 100}} class="lds-heart">
 					<div></div>
 				</div>
 			{/if}
 			<h1>RSVP</h1>
-			<form class="form-fields" on:submit={submit}>
+			<form class="form-fields">
 				{#if (attending || !retrieved) && !accepted}
 					<input
 						class="input-field"
@@ -451,7 +489,7 @@
 							</div>
 						</div>
 					{/if}
-					<input class="submit-button" type="submit" name="submit" value="Submit">
+					<input id="wtf" class="submit-button" type="button" name="submit" value="Submit" on:click={submit}>
 				{:else if !retrieved}
 					<input id="find-invitation-button" class="submit-button" type="button" on:click={getRsvp} name="submit"
 								 value="Find Invitation">
@@ -467,10 +505,10 @@
 			</form>
 		</div>
 	</div>
-</section>
+</div>
 
 <style>
-    section {
+    .rsvp-page-container {
         display: flex;
         justify-content: center;
         align-items: center;
@@ -494,7 +532,9 @@
     }
 
     .form-container-mask {
+        margin: 10px;
         width: 100%;
+        align-self: center;
         display: flex;
         justify-content: center;
         overflow: hidden;
@@ -510,6 +550,8 @@
         border-radius: 5px;
         background: #000000;
         width: max(40%, 500px);
+        max-width: 600px;
+        height: fit-content;
 
         --input-height: 3em;
     }
@@ -618,7 +660,7 @@
 
     .rsvp-response .name {
         font-size: max(2vw, 3vh);
-        font-family: Sacramento, serif;
+        font-family: "Parisienne", cursive;
     }
 
     .rsvp-response .status {

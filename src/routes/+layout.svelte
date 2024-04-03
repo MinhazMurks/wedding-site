@@ -17,7 +17,7 @@
     .app {
         display: flex;
         flex-direction: column;
-				width: 100vw;
+
 				min-height: 100vh;
 
         background: rgb(143,7,7);
@@ -25,9 +25,8 @@
         --svrollbar-thumb-background: black;
     }
 
-
     main {
         margin-top: 10vh;
-				min-height: 90vh;
+				height: fit-content;
     }
 </style>
