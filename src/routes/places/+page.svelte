@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { PUBLIC_WEDDING_SERVICE_HOST } from "$env/static/public";
-	import { onDestroy, onMount } from "svelte";
+	import { onDestroy, onMount, tick } from "svelte";
 	import { gsap } from "gsap";
 	import { ScrollTrigger } from "gsap/ScrollTrigger";
 	import { type GetAllPlacesResponse, PlaceCategory, type PlaceData } from "$lib/types/Responses.js";
@@ -12,13 +12,15 @@
 	const accordionEasing = "ease-in-out";
 
 	let loading = false;
-	let pinnedTitle: HTMLElement;
 	let openedAccordion: PlaceCategory | null;
 	let places: Map<PlaceCategory, PlaceData[]> = new Map();
 
 	let animations: gsap.core.Tween[] = [];
 
-	let scrollbarContainer: HTMLElement;
+	let placesTitleContainer: HTMLElement;
+	let mainBodyContainer: HTMLElement;
+	let nearbyTitleContainer: HTMLElement;
+	let accordionHeaders: HTMLElement;
 
 	onMount(() => {
 		gsap.registerPlugin(ScrollTrigger);
@@ -39,9 +41,8 @@
 		requestAnimationFrame(raf);
 		lenis.on("scroll", () => ScrollTrigger.update());
 
-		if (scrollbarContainer) {
-			initScrollTriggers();
-		}
+		initAnims();
+
 		return () => lenis.destroy();
 	});
 
@@ -49,44 +50,47 @@
 		animations.map(animation => animation.kill());
 	});
 
-	const initScrollTriggers = () => {
-		gsap.to(pinnedTitle, {
-				scrollTrigger: {
-					pin: true,
-					trigger: pinnedTitle,
-					start: "top +=20%",
-					end: `${window.outerHeight * 3} +=45%`,
-					invalidateOnRefresh: true, // to make it responsive
-				},
+	function initAnims(): void {
+		const startingTimeline = gsap.timeline({
+			scrollTrigger: {
+				start: "top center",
+				end: "bottom center",
 			},
-		);
-
-		gsap.utils.toArray("section").forEach((section: unknown, i) => {
-			let sectionElement = section as HTMLElement;
-			let background: HTMLElement = sectionElement.querySelector(".bg")!;
-
-			// Give the backgrounds some random images
-			//background!.style.backgroundImage = `url(https://picsum.photos/1600/800?random=${i})`;
-
-			// the first image (i === 0) should be handled differently because it should start at the very top.
-			// use function-based values in order to keep things responsive
-			animations.push(gsap.fromTo(background, {
-				backgroundPosition: () => i ? `50% ${-window.innerHeight * getRatio(sectionElement)}px` : "50% 0px",
-			}, {
-				backgroundPosition: () => `50% ${window.innerHeight * (1 - getRatio(sectionElement))}px`,
-				ease: "none",
-				scrollTrigger: {
-					trigger: sectionElement,
-					start: () => i ? "top bottom" : "top top",
-					end: "bottom top",
-					scrub: true,
-					invalidateOnRefresh: true, // to make it responsive
-				},
-			}));
 		});
-	};
 
-	const getPlaces = () => {
+		for (let placeTitle of placesTitleContainer.children) {
+			startingTimeline.from(placeTitle, {
+				opacity: 0,
+				x: 20,
+				y: 20,
+				ease: "power1.inOut",
+			});
+		}
+
+		startingTimeline.from(mainBodyContainer, {
+			opacity: 0,
+			scale: .9,
+			x: -10,
+			y: -10,
+			ease: "power1.inOut",
+		});
+
+		startingTimeline.from(nearbyTitleContainer, {
+			opacity: 0,
+			x: 20,
+			y: 20,
+			ease: "power1.inOut",
+		});
+
+		startingTimeline.from(accordionHeaders, {
+			opacity: 0,
+			y: -20,
+
+			ease: "power1.inOut",
+		});
+	}
+
+	function getPlaces(): void {
 		loading = true;
 		console.log("Loading...");
 		fetch(`${PUBLIC_WEDDING_SERVICE_HOST}/api/v1/place/all`, {
@@ -118,60 +122,49 @@
 			});
 	};
 
-	const getNonNullList = (placeData: PlaceData[] | undefined): PlaceData[] => {
+	function getNonNullList(placeData: PlaceData[] | undefined): PlaceData[] {
 		return placeData!;
-	};
+	}
 
-	const snakeCaseToSentenceCase = (str: string): string => {
+	function snakeCaseToSentenceCase(str: string): string {
 		const words = str.toLowerCase().split("_");
 		return words.map((word) => {
 			if (word.length > 2) {
 				return word[0].toUpperCase() + word.slice(1);
 			}
 		}).join(" ");
-	};
+	}
 
-	const getMapLink = (address: string): string => {
-		console.log(`encoded: ${encodeURIComponent(address)}`);
+	function getMapLink(address: string): string {
 		return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-	};
+	}
 
-	const formatPhoneNumber = (phoneNumber: string) => {
+	function formatPhoneNumber(phoneNumber: string) {
 		if (phoneNumber.length == 10) {
 			return `(${phoneNumber.substring(0, 3)}) ${phoneNumber.substring(3, 6)}-${phoneNumber.substring(6)}`;
 		}
 		return phoneNumber;
-	};
-
-	const getRatio = (element: Element) => {
-		return window.innerHeight / (window.innerHeight + element.clientHeight);
-	};
+	}
 </script>
 
 <div class="places-page-container">
-	<div class="main-title-container" bind:this={pinnedTitle}>
+	<div class="places-title-container" bind:this={placesTitleContainer}>
 		<h1>The Venue</h1>
+		<div class="places-content-item-info" style="align-self: center">
+			<MapPinIcon />
+			<span><a href="{getMapLink('2017 Gregory Rd, Orlando, FL 32825')}" target="_blank"
+							 rel="noopener noreferrer">2017 Gregory Rd, Orlando, FL 32825</a></span>
+		</div>
 	</div>
-	<div class="scrollbar-container" bind:this={scrollbarContainer}>
-		<section>
-			<div class="bg bg-image-1"></div>
-		</section>
-		<section>
-			<div class="bg bg-image-2"></div>
-		</section>
-		<section>
-			<div class="bg bg-image-3"></div>
-		</section>
-	</div>
-	<div class="main-body-container">
+	<div class="main-body-container" bind:this={mainBodyContainer}>
 		<p>We have chosen The Black Barn for our wedding venue. The Black Barn is a beautiful rustic but modern venue.
 			Located away from the main Orlando area, it boasts 5 acres of agricultural land. The Black Barn has both beautiful
-			greenery and modern architecture allowing us to enjoy the best of both worlds</p>
+			greenery and modern architecture allowing us to enjoy the best of both worlds.</p>
 	</div>
-	<div class="places-title-container">
+	<div class="places-title-container" bind:this={nearbyTitleContainer}>
 		<h1>Nearby</h1>
 	</div>
-	<div class="places-accordion-container">
+	<div class="places-accordion-container" bind:this={accordionHeaders}>
 		<Accordion bind:key={openedAccordion} duration="{accordionDuration}" easing="{accordionEasing}">
 			{#each places.keys() as placeKey}
 				{#if places.get(placeKey)}
@@ -252,54 +245,16 @@
         height: 100%;
     }
 
-    .main-title-container {
-        width: 100%;
-        z-index: 1;
-        position: absolute;
+    .places-title-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
         text-align: center;
     }
 
-    .main-title-container h1 {
-        isolation: isolate;
+    .places-title-container h1 {
         font-family: "Parisienne", cursive;
         font-size: 4.5rem;
-        color: white;
-    }
-
-    .scrollbar-container {
-        height: 100vh;
-        margin-bottom: 200vh;
-    }
-
-    .bg-image-1 {
-        background: url("/black-barn-ceremony-hall.jpg");
-    }
-
-    .bg-image-2 {
-        background: url("/black-barn-reception-hall.jpg");
-    }
-
-    .bg-image-3 {
-        background: url("/window-hall.jpg");
-    }
-
-    .scrollbar-container section {
-        position: relative;
-        height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .scrollbar-container .bg {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
     }
 
     .main-body-container {
@@ -309,18 +264,7 @@
         font-family: Jost, sans-serif;
         text-align: center;
         max-width: max(600px, 50vw);
-        font-size: 1.5rem;
-    }
-
-    .places-title-container {
-        display: flex;
-        justify-content: center;
-        text-align: center;
-    }
-
-    .places-title-container h1 {
-        font-family: "Parisienne", cursive;
-        font-size: 4.5rem;
+        font-size: min(2em, 5vw);
     }
 
     .places-accordion-container {

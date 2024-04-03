@@ -16,6 +16,12 @@
 			<li aria-current={$page.url.pathname === '/places' ? 'page' : undefined}>
 				<a href="{base}/places">Destination</a>
 			</li>
+			<li aria-current={$page.url.pathname === '/registry' ? 'page' : undefined}>
+				<a href="{base}/registry">Registry</a>
+			</li>
+			<li aria-current={$page.url.pathname === '/itinerary' ? 'page' : undefined}>
+				<a href="{base}/itinerary">Itinerary</a>
+			</li>
 			<li aria-current={$page.url.pathname === '/rsvp' ? 'page' : undefined}>
 				<a href="{base}/rsvp">RSVP</a>
 			</li>

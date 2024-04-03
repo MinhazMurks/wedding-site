@@ -5,24 +5,36 @@
 	import SegmentedButton from "$lib/SegmentedButton.svelte";
 	import { PUBLIC_WEDDING_SERVICE_HOST } from "$env/static/public";
 	import type { GetRsvpResponse } from "$lib/types/Responses";
+	import { gsap } from "gsap";
+	import { ScrollTrigger } from "gsap/ScrollTrigger";
+	import Lenis from "@studio-freight/lenis";
 
 	let formContainerMask: HTMLElement;
-
-	const updateHeightManually = (oldHeight: number) => {
-		const formContainerHeight = js("#form-container").outerHeight(true) || 0;
-		js("#form-container-mask").outerHeight(oldHeight);
-		js("#form-container-mask").outerHeight(formContainerHeight);
-
-		setTimeout(() => {
-				js("#form-container-mask").css({
-					height: "auto",
-				});
-			}, 800,
-		);
-	};
+	let formContainer: HTMLElement;
 
 	onMount(() => {
 		window.js = js;
+
+		gsap.registerPlugin(ScrollTrigger);
+
+		const lenis = new Lenis({
+			lerp: 0.1,
+			smoothWheel: true,
+		});
+
+		function raf(time: number) {
+			if (lenis) {
+				lenis.raf(time);
+				requestAnimationFrame(raf);
+			}
+		}
+
+		requestAnimationFrame(raf);
+		lenis.on("scroll", () => ScrollTrigger.update());
+
+		initAnims();
+
+		return () => lenis.destroy();
 	});
 
 	enum InputType {
@@ -57,6 +69,46 @@
 
 	let errorMessage: string | null = null;
 	let errorMessages: string[] | null = null;
+
+	function initAnims() {
+		gsap.from(formContainerMask, {
+			opacity: 0,
+			y: 50,
+			ease: "power2.inOut",
+			duration: .8,
+		});
+	}
+
+	function updateHeightManually(oldHeight: number) {
+		console.log(`oldHeight: ${oldHeight}`);
+		console.log(`newHeight: ${formContainer.offsetHeight}`);
+		console.log(`formContainerMask: ${formContainerMask}`);
+
+		const timeline = gsap.timeline();
+
+		if (oldHeight > formContainer.offsetHeight) {
+			timeline.set(
+				formContainer,
+				{
+					height: oldHeight,
+				},
+			).to(formContainer,
+				{
+					height: formContainer.offsetHeight,
+				});
+		} else {
+			timeline.set(
+				formContainerMask,
+				{
+					height: oldHeight,
+				},
+			).to(formContainerMask,
+				{
+					height: formContainer.offsetHeight + 20,
+				});
+		}
+
+	};
 
 	function getRsvp() {
 		loading = true;
@@ -130,8 +182,9 @@
 				return response.json();
 			})
 			.then(async () => {
-
 				const currentContainerMaskHeight = formContainerMask.offsetHeight;
+
+				console.log("happy path");
 
 				loading = false;
 				declined = true;
@@ -307,14 +360,14 @@
 
 <div class="rsvp-page-container">
 	<div bind:this={formContainerMask} id="form-container-mask" class="form-container-mask">
-		<div id="form-container" class="form-container" class:loading>
+		<div id="form-container" class="form-container" class:loading bind:this={formContainer}>
 			{#if loading}
 				<div transition:fade={{duration: 100}} class="lds-heart">
 					<div></div>
 				</div>
 			{/if}
 			<h1>RSVP</h1>
-			<form class="form-fields" on:submit={submit}>
+			<form class="form-fields">
 				{#if (attending || !retrieved) && !accepted}
 					<input
 						class="input-field"
@@ -447,7 +500,7 @@
 							</div>
 						</div>
 					{/if}
-					<input class="submit-button" type="submit" name="submit" value="Submit">
+					<input id="wtf" class="submit-button" type="button" name="submit" value="Submit" on:click={submit}>
 				{:else if !retrieved}
 					<input id="find-invitation-button" class="submit-button" type="button" on:click={getRsvp} name="submit"
 								 value="Find Invitation">
@@ -490,8 +543,9 @@
     }
 
     .form-container-mask {
-        padding: 10px;
+        margin: 10px;
         width: 100%;
+        align-self: center;
         display: flex;
         justify-content: center;
         overflow: hidden;
@@ -508,6 +562,7 @@
         background: #000000;
         width: max(40%, 500px);
         max-width: 600px;
+        height: fit-content;
 
         --input-height: 3em;
     }
