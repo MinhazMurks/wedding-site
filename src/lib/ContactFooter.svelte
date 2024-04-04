@@ -3,11 +3,12 @@
 	import { InputType } from "$lib/types/Events";
 	import { PUBLIC_WEDDING_SERVICE_HOST } from "$env/static/public";
 	import { ErrorResponse } from "$lib/types/Responses";
-	import { tick } from "svelte";
 
 	const usNumberFormat = [2, 5];
 
-	let loading = false;
+	let loadingContact = false;
+	let sent = false;
+	let errorMessage: string | null = null;
 
 	let firstName = "";
 	let lastName = "";
@@ -17,7 +18,8 @@
 	let message = "";
 
 	function submit() {
-		fetch(`${PUBLIC_WEDDING_SERVICE_HOST}/api/v1/contact?`, {
+		loadingContact = true;
+		fetch(`${PUBLIC_WEDDING_SERVICE_HOST}/api/v1/contact`, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -26,8 +28,9 @@
 				attending: true,
 				firstName: firstName,
 				lastName: lastName,
+				phoneNumber: phoneNumber,
 				email: email,
-				message: message
+				message: message,
 			}),
 		})
 			.then(async response => {
@@ -39,23 +42,17 @@
 				return response.json();
 			})
 			.then(async () => {
-
+				loadingContact = false;
+				errorMessage = null;
+				sent = true;
 			})
 			.catch(async error => {
-				const currentContainerMaskHeight = formContainerMask.offsetHeight;
-
-				loading = false;
-
-				if (error.message) {
-					errorMessage = error.message;
-					console.log(error.message);
-				} else if (error.messages) {
-					errorMessages = error.messages;
-					console.log(error.messages);
-				}
-
-				await tick();
-				updateHeightManually(currentContainerMaskHeight);
+				console.log(`got here ${error}`)
+				console.log(error)
+				loadingContact = false;
+				errorMessage = error.message;
+				errorMessage = "Sdf"
+				console.log(error.message);
 			});
 	}
 
@@ -111,51 +108,57 @@
 </script>
 
 <footer>
-	<form action="" class="contact-form-fields">
-		<h1>Contact us</h1>
-		<div class="group-container">
-			<input
-				class="contact-input-field"
-				type="text"
-				name="firstName"
-				placeholder="First Name"
-				in:fade={{duration:200}}
-				bind:value={firstName}
-				required
-			/>
-			<input
-				class="contact-input-field"
-				type="text"
-				name="lastName"
-				placeholder="Last Name"
-				in:fade={{duration:200}}
-				bind:value={lastName}
-				required
-			/>
-		</div>
-		<div class="group-container">
-			<input
-				class="contact-input-field"
-				type="email"
-				name="email"
-				placeholder="Email"
-				bind:value={email}
-				in:fade={{duration:600}}
-				required
-			/>
-			<input
-				class="contact-input-field"
-				type="text"
-				name="phoneNumber"
-				placeholder="Phone Number"
-				value={phoneNumberVisual}
-				in:fade={{duration:800}}
-				on:input={e => validateNumberInput(e)}
-				on:paste={e => validatePhoneNumberPasteInput(e)}
-				required
-			/>
-		</div>
-		<div class="group-container">
+	<form action="" class="contact-form-fields" class:loadingContact on:submit|preventDefault={submit}>
+		{#if loadingContact}
+			<div transition:fade={{duration: 100}} class="lds-heart">
+				<div></div>
+			</div>
+		{/if}
+		{#if !sent}
+			<h1>Contact us</h1>
+			<div class="group-container">
+				<input
+					class="contact-input-field"
+					type="text"
+					name="firstName"
+					placeholder="First Name"
+					in:fade={{duration:200}}
+					bind:value={firstName}
+					required
+				/>
+				<input
+					class="contact-input-field"
+					type="text"
+					name="lastName"
+					placeholder="Last Name"
+					in:fade={{duration:200}}
+					bind:value={lastName}
+					required
+				/>
+			</div>
+			<div class="group-container">
+				<input
+					class="contact-input-field"
+					type="email"
+					name="email"
+					placeholder="Email"
+					bind:value={email}
+					in:fade={{duration:600}}
+					required
+				/>
+				<input
+					class="contact-input-field"
+					type="text"
+					name="phoneNumber"
+					placeholder="Phone Number"
+					value={phoneNumberVisual}
+					in:fade={{duration:800}}
+					on:input={e => validateNumberInput(e)}
+					on:paste={e => validatePhoneNumberPasteInput(e)}
+					required
+				/>
+			</div>
+			<div class="group-container">
 			<textarea
 				class="contact-input-field context-text-area"
 				name="message"
@@ -164,8 +167,18 @@
 				bind:value={message}
 				required
 			/>
-		</div>
-		<input id="wtf" class="submit-button" type="button" name="send" value="Send" on:click={submit}>
+			</div>
+
+			<input class="contact-submit-button" type="submit" name="send" value="Send">
+		{:else}
+			<div>
+				<span>Your message has been sent!</span>
+			</div>
+		{/if}
+
+		{#if errorMessage}
+			<div in:fade class="contact-error-message">{errorMessage}</div>
+		{/if}
 	</form>
 </footer>
 
@@ -189,7 +202,13 @@
 			row-gap: 5px;
 	}
 
-	.group-container {
+  .loadingContact {
+      opacity: 0.8;
+      cursor: default;
+      pointer-events: none;
+  }
+
+  .group-container {
       display: flex;
       flex-direction: row;
       justify-content: center;
@@ -224,7 +243,8 @@
       outline: none;
   }
 
-  .submit-button {
+  .contact-submit-button {
+			z-index: 100;
       margin-top: 10px;
       border: none;
       background: #cdcdcd;
@@ -232,9 +252,86 @@
       padding: 10px;
   }
 
-  .submit-button:hover {
+  .contact-submit-button:hover {
       cursor: pointer;
       transform: scale(1.05);
       transition: 100ms;
+  }
+
+  .contact-error-message {
+      background: rgb(143, 7, 7);
+      background: linear-gradient(209deg, rgba(143, 7, 7, 1) 50%, rgb(108, 4, 4) 90%);
+      color: var(--light-text-color);
+      border-radius: 5px;
+      margin: 10px;
+      padding: 10px 50px;
+
+      box-shadow: 0 0 50px -8px rgba(0, 0, 0, 0.75);
+      -webkit-box-shadow: 0 0 50px -8px rgba(0, 0, 0, 0.75);
+      -moz-box-shadow: 0 0 50px -8px rgba(0, 0, 0, 0.75);
+  }
+
+  /*
+Loading Animation
+*/
+
+  .lds-heart {
+      display: inline-block;
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      transform: rotate(45deg);
+      transform-origin: 40px 40px;
+  }
+
+  .lds-heart div {
+      top: 32px;
+      left: 32px;
+      position: absolute;
+      width: max(4vw, 8vh);
+      height: max(4vw, 8vh);
+      background: #fff;
+      animation: lds-heart 1.2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+  }
+
+  .lds-heart div:after,
+  .lds-heart div:before {
+      content: " ";
+      position: absolute;
+      display: block;
+      width: max(4vw, 8vh);
+      height: max(4vw, 8vh);
+      background: #fff;
+  }
+
+  .lds-heart div:before {
+      left: min(-2vw, -5vh);
+      border-radius: 50% 0 0 50%;
+  }
+
+  .lds-heart div:after {
+      top: min(-2vw, -5vh);
+      border-radius: 50% 50% 0 0;
+  }
+
+  @keyframes lds-heart {
+      0% {
+          transform: scale(0.95);
+      }
+      5% {
+          transform: scale(1.1);
+      }
+      39% {
+          transform: scale(0.85);
+      }
+      45% {
+          transform: scale(1);
+      }
+      60% {
+          transform: scale(0.95);
+      }
+      100% {
+          transform: scale(0.9);
+      }
   }
 </style>

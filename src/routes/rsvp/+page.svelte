@@ -11,7 +11,6 @@
 	import { ErrorResponse } from "$lib/types/Responses";
 	import { InputType } from "$lib/types/Events";
 
-	let formContainerMask: HTMLElement;
 	let formContainer: HTMLElement;
 
 	onMount(() => {
@@ -54,17 +53,16 @@
 	let phoneNumber = "";
 	let phoneNumberVisual = "";
 	let foodSelection = "CHICKEN";
-
 	let plusOneEnabled = false;
 	let plusOneUsed = false;
-	
-	let plusOneFoodSelection = null;
+	let plusOneFoodSelection: string | null = null;
+	let rsvpMessage = "";
 
 	let errorMessage: string | null = null;
 	let errorMessages: string[] | null = null;
 
 	function initAnims() {
-		gsap.from(formContainerMask, {
+		gsap.from(formContainer, {
 			opacity: 0,
 			y: 50,
 			ease: "power2.inOut",
@@ -76,37 +74,22 @@
 		const timeline = gsap.timeline();
 		const formContainerTrueHeight =
 			formContainer.offsetHeight -
-			formContainer.style.marginTop.length -
-			formContainer.style.marginBottom.length;
+			formContainer.style.paddingBottom.length -
+			formContainer.style.paddingTop.length;
 
 		console.log("oldHeight", oldHeight);
 		console.log("newHeight", formContainerTrueHeight);
 		console.log("newHeightFull", formContainer.offsetHeight);
-		const formContainerMaskTrueHeight = formContainerMask.offsetHeight - formContainerMask.style.paddingBottom.length - formContainerMask.style.paddingTop.length;
-		if (oldHeight > formContainerTrueHeight) {
-			timeline.set(
-				formContainer,
-				{
-					height: oldHeight,
-				},
-			).to(formContainer,
-				{
-					paddingTop: formContainer.style.paddingTop,
-					paddingBottom: formContainer.style.paddingBottom,
-					height: formContainerTrueHeight,
-				});
-		} else {
-			timeline.set(
-				formContainerMask,
-				{
-					height: oldHeight,
-				},
-			).to(formContainerMask,
-				{
-					height: formContainerTrueHeight,
-				});
-		}
 
+		timeline.set(
+			formContainer,
+			{
+				height: oldHeight,
+			},
+		).to(formContainer,
+			{
+				height: "auto"
+			});
 	}
 
 	function getRsvp() {
@@ -131,7 +114,7 @@
 			.then(async data => {
 				data = data as GetRsvpResponse;
 
-				const currentContainerMaskHeight = formContainerMask.offsetHeight;
+				const currentContainerMaskHeight = formContainer.offsetHeight;
 
 				firstName = data.firstName;
 				lastName = data.lastName;
@@ -146,7 +129,7 @@
 				updateHeightManually(currentContainerMaskHeight);
 			})
 			.catch(async error => {
-				const currentContainerMaskHeight = formContainerMask.offsetHeight;
+				const currentContainerMaskHeight = formContainer.offsetHeight;
 
 				loading = false;
 				errorMessage = error.message;
@@ -180,7 +163,7 @@
 				return response.json();
 			})
 			.then(async () => {
-				const currentContainerMaskHeight = formContainerMask.offsetHeight;
+				const currentContainerMaskHeight = formContainer.offsetHeight;
 
 				loading = false;
 				declined = true;
@@ -190,7 +173,7 @@
 				updateHeightManually(currentContainerMaskHeight);
 			})
 			.catch(async error => {
-				const currentContainerMaskHeight = formContainerMask.offsetHeight;
+				const currentContainerMaskHeight = formContainer.offsetHeight;
 
 				loading = false;
 				errorMessage = error.message;
@@ -203,7 +186,7 @@
 	async function confirmAttendance() {
 		attending = true;
 
-		const currentContainerMaskHeight = formContainerMask.offsetHeight;
+		const currentContainerMaskHeight = formContainer.offsetHeight;
 		await tick();
 
 		updateHeightManually(currentContainerMaskHeight);
@@ -223,6 +206,8 @@
 				phoneNumber: phoneNumber,
 				foodSelection: foodSelection,
 				plusOneUsed: plusOneUsed,
+				plusOneFoodSelection: plusOneFoodSelection,
+				message: rsvpMessage,
 			}),
 		})
 			.then(async response => {
@@ -234,8 +219,7 @@
 				return response.json();
 			})
 			.then(async () => {
-
-				const currentContainerMaskHeight = formContainerMask.offsetHeight;
+				const currentContainerMaskHeight = formContainer.offsetHeight;
 
 				loading = false;
 				accepted = true;
@@ -246,7 +230,7 @@
 				updateHeightManually(currentContainerMaskHeight);
 			})
 			.catch(async error => {
-				const currentContainerMaskHeight = formContainerMask.offsetHeight;
+				const currentContainerMaskHeight = formContainer.offsetHeight;
 
 				loading = false;
 
@@ -333,19 +317,15 @@
 
 	async function updatePlusOne(value: string): Promise<void> {
 		const currentContainerMaskHeight =
-			formContainerMask.offsetHeight -
-			formContainerMask.style.paddingTop.length -
-			formContainerMask.style.paddingBottom.length -
-			formContainerMask.style.marginTop.length -
-			formContainerMask.style.marginBottom.length;
+			formContainer.offsetHeight -
+			formContainer.style.paddingTop.length -
+			formContainer.style.paddingBottom.length -
+			formContainer.style.marginTop.length -
+			formContainer.style.marginBottom.length;
 
 		plusOneUsed = value == "true";
 		plusOneFoodSelection = value ? "CHICKEN" : null
 
-		await tick();
-		await tick();
-		await tick();
-		await tick();
 		await tick();
 		updateHeightManually(currentContainerMaskHeight);
 	}
@@ -367,7 +347,6 @@
 </script>
 
 <div class="rsvp-page-container">
-	<div bind:this={formContainerMask} id="form-container-mask" class="form-container-mask">
 		<div id="form-container" class="form-container" class:loading bind:this={formContainer}>
 			{#if loading}
 				<div transition:fade={{duration: 100}} class="lds-heart">
@@ -375,7 +354,7 @@
 				</div>
 			{/if}
 			<h1>RSVP</h1>
-			<form class="form-fields">
+			<form class="form-fields" on:submit={submit}>
 				{#if (attending || !retrieved) && !accepted}
 					<input
 						class="input-field"
@@ -479,7 +458,6 @@
 							/>
 						</div>
 					</div>
-
 					{#if plusOneEnabled}
 						<div class="food-section">
 							<h2>Will you be attending alone?</h2>
@@ -514,7 +492,7 @@
 									in:fade={{duration:1000}}
 								>
 									<SegmentedButton
-										name="group"
+										name="guest-food-selection"
 										defaultIndex={0}
 										callback={updatePlusOneFoodSelection}
 										segments={[
@@ -539,7 +517,16 @@
 							</div>
 						{/if}
 					{/if}
-					<input id="wtf" class="submit-button" type="button" name="submit" value="Submit" on:click={submit}>
+					<div class="text-box-container">
+						<textarea
+							class="input-field text-box"
+							name="rsvp-message"
+							placeholder="Any information you want us to know"
+							in:fade={{duration:800}}
+							bind:value={rsvpMessage}
+						/>
+					</div>
+					<input id="wtf" class="submit-button" type="submit" name="submit" value="Submit">
 				{:else if !retrieved}
 					<input id="find-invitation-button" class="submit-button" type="button" on:click={getRsvp} name="submit"
 								 value="Find Invitation">
@@ -554,7 +541,6 @@
 				{/if}
 			</form>
 		</div>
-	</div>
 </div>
 
 <style>
@@ -581,17 +567,8 @@
         margin-bottom: 2rem;
     }
 
-    .form-container-mask {
-        margin: 10px;
-        width: 100%;
-        align-self: center;
-        display: flex;
-        justify-content: center;
-        overflow: hidden;
-        transition: height 800ms ease;
-    }
-
     .form-container {
+				margin: 10px;
         padding: 20px;
         display: flex;
         flex-direction: column;
@@ -602,6 +579,9 @@
         width: max(40%, 500px);
         max-width: 600px;
         height: fit-content;
+
+
+        overflow: hidden;
 
         --input-height: 3em;
     }
@@ -645,6 +625,21 @@
         border: none;
         outline: none;
     }
+
+		.text-box-container {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				width: 100%;
+				margin-top: 20px;
+		}
+
+		.text-box {
+        font-family: Jost, serif;
+        font-size: var(--font-size);
+				width: 85%;
+				height: 100%;
+		}
 
     .form-fields {
         display: flex;

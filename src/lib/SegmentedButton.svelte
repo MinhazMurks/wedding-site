@@ -50,12 +50,12 @@
 				<input
 					type="radio"
 					value={segment.value}
-					id={segment.label}
+					id={segment.label+name}
 					name={name}
 					on:change={() => onInputChange(index)}
 					checked={index === activeIndex}
 				/>
-				<label for="{segment.label}">
+				<label for="{segment.label+name}">
 					{segment.label}
 				</label>
 			</div>
