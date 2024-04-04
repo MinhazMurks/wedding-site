@@ -17,8 +17,9 @@
 	let pageBodyContainer: HTMLElement;
 	let scrollDialogueContainer: HTMLElement;
 	let scrollDialogueTimeline: gsap.core.Timeline;
-
 	let timelines: gsap.core.Timeline[] = [];
+
+	let showScrollDialogue = true;
 
 	onMount(() => {
 		gsap.registerPlugin(ScrollTrigger);
@@ -84,7 +85,6 @@
 				trigger: titleContainer,
 				start: "top 200",
 				end: "+=100% 200",
-				markers: true,
 				pin: pageBodyContainer,
 				onEnter: () => activateScrollDialogue(false)
 			}
@@ -151,6 +151,7 @@
 	}
 
 	function activateScrollDialogue(show: boolean) {
+		showScrollDialogue = show;
 		if (show) {
 			gsap.to(scrollDialogueContainer, {
 				opacity: 1,
@@ -163,6 +164,11 @@
 			})
 			scrollDialogueTimeline.kill();
 		}
+	}
+
+	function scrollToBottom() {
+		console.log("clicked")
+		window.scrollTo({ left: 0, top: document.body.scrollHeight, behavior: "smooth" });
 	}
 </script>
 
@@ -219,21 +225,24 @@
 					and more. We can't wait to share this special day with you!
 				</span>
 				<span>
-					You will find all information pertaining to the wedding here. To find out more about the venue and what's nearby, head to the <span><a href="{base}/places">Destination</a></span> tab.
-					If you want to check out the registry, head to the <span><a href="{base}/registry">Registry</a></span> tab.
-					Want to RSVP? Head to the <span><a href="{base}/rsvp">RSVP</a></span> tab.
-					If you have any questions, scroll down to the contact form below to email us!
+					You will find all information pertaining to the wedding here. To find out more about the venue and what's nearby, head to the <span style="padding: 0px" ><a style="padding: 0" href="{base}/places">Destination</a></span> tab.
+					If you want to check out the registry, head to the <span style="padding: 0px"><a href="{base}/registry">Registry</a></span> tab.
+					Want to RSVP? Head to the <span style="padding: 0px"><a href="{base}/rsvp">RSVP</a></span> tab.
+					If you have any questions, scroll down to the  <span class="link-span" style="padding: 0px" role="button" tabindex={4} on:click={scrollToBottom}>contact form</span> below to email us!
+					"
 				</span>
 			</div>
 		</div>
 	</div>
 </div>
 
-<div class="scroll-dialogue" bind:this={scrollDialogueContainer}>
-	<ChevronsDownIcon/>
-	<h1>Scroll down</h1>
-	<ChevronsDownIcon/>
-</div>
+{#if showScrollDialogue}
+	<div class="scroll-dialogue" bind:this={scrollDialogueContainer}>
+		<ChevronsDownIcon/>
+		<h1>Scroll down</h1>
+		<ChevronsDownIcon/>
+	</div>
+{/if}
 
 <style>
     @font-face {
@@ -353,7 +362,7 @@
 				font-family: Jost, sans-serif;
 				position: absolute;
         width: 100%;
-        opacity: 0;
+        opacity: .5;
 				bottom: 0;
 				margin-bottom: 10px;
 				z-index: 99;
@@ -362,5 +371,15 @@
 
 		.scroll-dialogue h1 {
 				font-size: min(2.5em, 6vw);
+		}
+
+		.link-span {
+				padding: 0px;
+				color: white;
+		}
+
+		.link-span:hover {
+				text-decoration: underline;
+				cursor: pointer;
 		}
 </style>

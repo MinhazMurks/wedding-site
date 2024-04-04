@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount, tick } from "svelte";
 	import { fade } from "svelte/transition";
-	import js from "jquery";
 	import SegmentedButton from "$lib/SegmentedButton.svelte";
 	import { PUBLIC_WEDDING_SERVICE_HOST } from "$env/static/public";
 	import { gsap } from "gsap";
@@ -14,8 +13,6 @@
 	let formContainer: HTMLElement;
 
 	onMount(() => {
-		window.js = js;
-
 		gsap.registerPlugin(ScrollTrigger);
 
 		const lenis = new Lenis({
@@ -88,7 +85,7 @@
 			},
 		).to(formContainer,
 			{
-				height: "auto"
+				height: "auto",
 			});
 	}
 
@@ -324,7 +321,7 @@
 			formContainer.style.marginBottom.length;
 
 		plusOneUsed = value == "true";
-		plusOneFoodSelection = value ? "CHICKEN" : null
+		plusOneFoodSelection = value ? "CHICKEN" : null;
 
 		await tick();
 		updateHeightManually(currentContainerMaskHeight);
@@ -347,98 +344,98 @@
 </script>
 
 <div class="rsvp-page-container">
-		<div id="form-container" class="form-container" class:loading bind:this={formContainer}>
-			{#if loading}
-				<div transition:fade={{duration: 100}} class="lds-heart">
-					<div></div>
+	<div id="form-container" class="form-container" class:loading bind:this={formContainer}>
+		{#if loading}
+			<div transition:fade={{duration: 100}} class="lds-heart">
+				<div></div>
+			</div>
+		{/if}
+		<h1>RSVP</h1>
+		<form class="form-fields" on:submit={submit}>
+			{#if (attending || !retrieved) && !accepted}
+				<input
+					class="input-field"
+					type="text"
+					name="firstName"
+					placeholder="First Name"
+					in:fade={{duration:200}}
+					bind:value={firstName}
+					on:input={e => validateFirstName(e)}
+					required
+				/>
+				<input
+					class="input-field"
+					type="text"
+					name="lastName"
+					placeholder="Last Name"
+					in:fade={{duration:400}}
+					bind:value={lastName}
+					on:input={e => validateLastName(e)}
+					required
+				/>
+			{/if}
+
+			{#if retrieved && !declined && !attending && !accepted}
+				<h2 in:fade>Will you be able to accept?</h2>
+				<div in:fade class="attending-dialogue">
+					<button
+						class="submit-button rsvp-response response"
+						type="button"
+						on:click={confirmAttendance}
+					>
+						<span class="name">{fullNameTitleCase()}</span>
+						<span class="status">Joyfully Accepts</span>
+					</button>
+
+					<button
+						class="submit-button rsvp-response negative"
+						type="button"
+						on:click={sendDecline}
+					>
+						<span class="name">{fullNameTitleCase()}</span>
+						<span class="status">Regretfully Declines</span>
+					</button>
 				</div>
 			{/if}
-			<h1>RSVP</h1>
-			<form class="form-fields" on:submit={submit}>
-				{#if (attending || !retrieved) && !accepted}
-					<input
-						class="input-field"
-						type="text"
-						name="firstName"
-						placeholder="First Name"
-						in:fade={{duration:200}}
-						bind:value={firstName}
-						on:input={e => validateFirstName(e)}
-						required
-					/>
-					<input
-						class="input-field"
-						type="text"
-						name="lastName"
-						placeholder="Last Name"
-						in:fade={{duration:400}}
-						bind:value={lastName}
-						on:input={e => validateLastName(e)}
-						required
-					/>
-				{/if}
 
-				{#if retrieved && !declined && !attending && !accepted}
-					<h2 in:fade>Will you be able to accept?</h2>
-					<div in:fade class="attending-dialogue">
-						<button
-							class="submit-button rsvp-response response"
-							type="button"
-							on:click={confirmAttendance}
-						>
-							<span class="name">{fullNameTitleCase()}</span>
-							<span class="status">Joyfully Accepts</span>
-						</button>
+			{#if declined || accepted}
+				<div class="declined-dialogue">
+					<h2 in:fade={{duration: 200}}>Thank you, your RSVP has been submitted successfully!</h2>
+				</div>
+			{/if}
 
-						<button
-							class="submit-button rsvp-response negative"
-							type="button"
-							on:click={sendDecline}
-						>
-							<span class="name">{fullNameTitleCase()}</span>
-							<span class="status">Regretfully Declines</span>
-						</button>
-					</div>
-				{/if}
-
-				{#if declined || accepted}
-					<div class="declined-dialogue">
-						<h2 in:fade={{duration: 200}}>Thank you, your RSVP has been submitted successfully!</h2>
-					</div>
-				{/if}
-
-				{#if attending && !accepted}
-					<input
-						class="input-field"
-						type="email"
-						name="email"
-						placeholder="Email"
-						bind:value={email}
-						in:fade={{duration:600}}
-						required
-					/>
-					<input
-						class="input-field"
-						type="text"
-						name="phoneNumber"
-						placeholder="Phone Number"
-						value={phoneNumberVisual}
-						in:fade={{duration:800}}
-						on:input={e => validateNumberInput(e)}
-						on:paste={e => validatePhoneNumberPasteInput(e)}
-						required
-					/>
-					<div class="food-section">
-						<h2>Make your food selection</h2>
-						<div
-							class="food-selection"
-							in:fade={{duration:1000}}
-						>
-							<SegmentedButton
-								name="group"
-								defaultIndex={0}
-								callback={updateFoodSelection}
-								segments={[
+			{#if attending && !accepted}
+				<input
+					class="input-field"
+					type="email"
+					name="email"
+					placeholder="Email"
+					bind:value={email}
+					in:fade={{duration:600}}
+					required
+				/>
+				<input
+					class="input-field"
+					type="text"
+					name="phoneNumber"
+					placeholder="Phone Number"
+					value={phoneNumberVisual}
+					in:fade={{duration:800}}
+					on:input={e => validateNumberInput(e)}
+					on:paste={e => validatePhoneNumberPasteInput(e)}
+					required
+				/>
+				<div class="food-section">
+					<h2>Make your food selection</h2>
+					<div
+						class="food-selection"
+						in:fade={{duration:1000}}
+					>
+						<SegmentedButton
+							name="group"
+							defaultIndex={0}
+							callback={updateFoodSelection}
+							segments={[
 							{
 								label: "Chicken",
 								value: "CHICKEN",
@@ -455,21 +452,21 @@
 								bound: null,
 							}
 						]}
-							/>
-						</div>
+						/>
 					</div>
-					{#if plusOneEnabled}
-						<div class="food-section">
-							<h2>Will you be attending alone?</h2>
-							<div
-								class="food-selection"
-								in:fade={{duration:1000}}
-							>
-								<SegmentedButton
-									name="plus-one"
-									defaultIndex={0}
-									callback={updatePlusOne}
-									segments={[
+				</div>
+				{#if plusOneEnabled}
+					<div class="food-section">
+						<h2>Will you be attending alone?</h2>
+						<div
+							class="food-selection"
+							in:fade={{duration:1000}}
+						>
+							<SegmentedButton
+								name="plus-one"
+								defaultIndex={0}
+								callback={updatePlusOne}
+								segments={[
 										{
 											label: "Attending solo",
 											value: "false",
@@ -481,21 +478,21 @@
 											bound: null,
 										}
 									]}
-								/>
-							</div>
+							/>
 						</div>
-						{#if plusOneUsed}
-							<div class="food-section">
-								<h2>Make your guest's food selection</h2>
-								<div
-									class="food-selection"
-									in:fade={{duration:1000}}
-								>
-									<SegmentedButton
-										name="guest-food-selection"
-										defaultIndex={0}
-										callback={updatePlusOneFoodSelection}
-										segments={[
+					</div>
+					{#if plusOneUsed}
+						<div class="food-section">
+							<h2>Make your guest's food selection</h2>
+							<div
+								class="food-selection"
+								in:fade={{duration:1000}}
+							>
+								<SegmentedButton
+									name="guest-food-selection"
+									defaultIndex={0}
+									callback={updatePlusOneFoodSelection}
+									segments={[
 											{
 												label: "Chicken",
 												value: "CHICKEN",
@@ -512,12 +509,12 @@
 												bound: null,
 											}
 										]}
-									/>
-								</div>
+								/>
 							</div>
-						{/if}
+						</div>
 					{/if}
-					<div class="text-box-container">
+				{/if}
+				<div class="text-box-container">
 						<textarea
 							class="input-field text-box"
 							name="rsvp-message"
@@ -525,22 +522,22 @@
 							in:fade={{duration:800}}
 							bind:value={rsvpMessage}
 						/>
-					</div>
-					<input id="wtf" class="submit-button" type="submit" name="submit" value="Submit">
-				{:else if !retrieved}
-					<input id="find-invitation-button" class="submit-button" type="button" on:click={getRsvp} name="submit"
-								 value="Find Invitation">
-				{/if}
+				</div>
+				<input id="wtf" class="submit-button" type="submit" name="submit" value="Submit">
+			{:else if !retrieved}
+				<input id="find-invitation-button" class="submit-button" type="button" on:click={getRsvp} name="submit"
+							 value="Find Invitation">
+			{/if}
 
-				{#if errorMessage}
-					<div in:fade class="error-message">{errorMessage}</div>
-				{:else if errorMessages}
-					{#each errorMessages as message}
-						<div in:fade class="error-message">{message}</div>
-					{/each}
-				{/if}
-			</form>
-		</div>
+			{#if errorMessage}
+				<div in:fade class="error-message">{errorMessage}</div>
+			{:else if errorMessages}
+				{#each errorMessages as message}
+					<div in:fade class="error-message">{message}</div>
+				{/each}
+			{/if}
+		</form>
+	</div>
 </div>
 
 <style>
@@ -568,7 +565,7 @@
     }
 
     .form-container {
-				margin: 10px;
+        margin: 10px;
         padding: 20px;
         display: flex;
         flex-direction: column;
@@ -626,20 +623,20 @@
         outline: none;
     }
 
-		.text-box-container {
-				display: flex;
-				justify-content: center;
-				align-items: center;
-				width: 100%;
-				margin-top: 20px;
-		}
+    .text-box-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin-top: 20px;
+    }
 
-		.text-box {
+    .text-box {
         font-family: Jost, serif;
         font-size: var(--font-size);
-				width: 85%;
-				height: 100%;
-		}
+        width: 85%;
+        height: 100%;
+    }
 
     .form-fields {
         display: flex;

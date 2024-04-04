@@ -61,13 +61,13 @@
     li {
         position: relative;
         height: 100%;
+        padding: 5px;
     }
 
     nav a {
         display: flex;
         height: 100%;
         align-items: center;
-        padding: 0 0.5rem;
         color: var(--color-text);
         font-weight: 500;
         font-size: 0.8rem;

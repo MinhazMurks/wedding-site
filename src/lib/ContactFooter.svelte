@@ -3,12 +3,15 @@
 	import { InputType } from "$lib/types/Events";
 	import { PUBLIC_WEDDING_SERVICE_HOST } from "$env/static/public";
 	import { ErrorResponse } from "$lib/types/Responses";
+	import { gsap } from "gsap";
+	import { tick } from "svelte";
 
 	const usNumberFormat = [2, 5];
 
 	let loadingContact = false;
 	let sent = false;
 	let errorMessage: string | null = null;
+	let errorMessages: string[] | null = null;
 
 	let firstName = "";
 	let lastName = "";
@@ -16,6 +19,8 @@
 	let phoneNumberVisual = "";
 	let email = "";
 	let message = "";
+
+	let footer: HTMLElement;
 
 	function submit() {
 		loadingContact = true;
@@ -37,22 +42,49 @@
 				if (response.status >= 500) {
 					throw new Error("Something went wrong");
 				} else if (response.status >= 400) {
+					console.log("Herrr");
+					console.log(response);
 					throw await response.json() as never as ErrorResponse;
 				}
 				return response.json();
 			})
 			.then(async () => {
+				const footerHeight = footer.offsetHeight;
 				loadingContact = false;
 				errorMessage = null;
+				errorMessages = null;
 				sent = true;
+
+				await tick();
+				updateHeightManually(footerHeight);
 			})
 			.catch(async error => {
-				console.log(`got here ${error}`)
-				console.log(error)
+				const footerHeight = footer.offsetHeight;
 				loadingContact = false;
-				errorMessage = error.message;
-				errorMessage = "Sdf"
-				console.log(error.message);
+
+
+				if (error.message) {
+					errorMessage = error.message;
+				} else if (error.messages) {
+					errorMessages = error.messages;
+				}
+
+				await tick();
+				updateHeightManually(footerHeight);
+			});
+	}
+
+	function updateHeightManually(oldHeight: number) {
+		const timeline = gsap.timeline();
+
+		timeline.set(
+			footer,
+			{
+				height: oldHeight,
+			},
+		).to(footer,
+			{
+				height: "auto",
 			});
 	}
 
@@ -107,7 +139,7 @@
 	}
 </script>
 
-<footer>
+<footer bind:this={footer}>
 	<form action="" class="contact-form-fields" class:loadingContact on:submit|preventDefault={submit}>
 		{#if loadingContact}
 			<div transition:fade={{duration: 100}} class="lds-heart">
@@ -171,167 +203,172 @@
 
 			<input class="contact-submit-button" type="submit" name="send" value="Send">
 		{:else}
-			<div>
-				<span>Your message has been sent!</span>
-			</div>
+			<h1>Your message has been sent!</h1>
 		{/if}
 
 		{#if errorMessage}
 			<div in:fade class="contact-error-message">{errorMessage}</div>
+		{:else if errorMessages}
+			{#each errorMessages as message}
+				<div in:fade class="contact-error-message">{message}</div>
+			{/each}
 		{/if}
 	</form>
 </footer>
 
 <style>
-	footer {
-			display: flex;
-			justify-content: center;
-			align-items: center;
+    footer {
+        display: flex;
+        justify-content: center;
+        align-items: center;
 
-			width: 100vw;
-			background: black;
-	}
+        width: 100vw;
+        background: black;
+    }
 
-	.contact-form-fields {
-			display: flex;
-			flex-direction: column;
-      justify-content: center;
-      align-items: center;
+    .contact-form-fields {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
 
-			padding: 20px;
-			row-gap: 5px;
-	}
+        padding: 20px;
+        row-gap: 5px;
+        z-index: 150;
+        margin-bottom: 4vh;
+    }
 
-  .loadingContact {
-      opacity: 0.8;
-      cursor: default;
-      pointer-events: none;
-  }
+    .loadingContact {
+        opacity: 0.8;
+        cursor: default;
+        pointer-events: none;
+    }
 
-  .group-container {
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      align-items: center;
-			column-gap: 5px;
-			width: 100%
-	}
+    .group-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        column-gap: 5px;
+        width: 100%
+    }
 
-  .contact-input-field {
-      box-sizing: border-box;
-      border: none;
-      background: #dfdfdf;
-      height: var(--input-height);
-      padding: 10px;
-      border-radius: 5px;
-      width: 100%;
-  }
+    .contact-input-field {
+        box-sizing: border-box;
+        border: none;
+        background: #dfdfdf;
+        height: var(--input-height);
+        padding: 10px;
+        border-radius: 5px;
+        width: 100%;
+    }
 
-	.context-text-area {
-			font-family: Jost, serif;
-			font-size: var(--font-size);
-			width: 100%;
-	}
+    .context-text-area {
+        font-family: Jost, serif;
+        font-size: var(--font-size);
+        width: 100%;
+    }
 
-  .contact-input-field::placeholder {
-      color: #595959;
-  }
+    .contact-input-field::placeholder {
+        color: #595959;
+    }
 
-  .contact-input-field:focus {
-      color: black;
-      border: none;
-      outline: none;
-  }
+    .contact-input-field:focus {
+        color: black;
+        border: none;
+        outline: none;
+    }
 
-  .contact-submit-button {
-			z-index: 100;
-      margin-top: 10px;
-      border: none;
-      background: #cdcdcd;
-      border-radius: 5px;
-      padding: 10px;
-  }
+    .contact-submit-button {
+        z-index: 100;
+        margin-top: 10px;
+        border: none;
+        background: #cdcdcd;
+        border-radius: 5px;
+        padding: 10px;
+    }
 
-  .contact-submit-button:hover {
-      cursor: pointer;
-      transform: scale(1.05);
-      transition: 100ms;
-  }
+    .contact-submit-button:hover {
+        cursor: pointer;
+        transform: scale(1.05);
+        transition: 100ms;
+    }
 
-  .contact-error-message {
-      background: rgb(143, 7, 7);
-      background: linear-gradient(209deg, rgba(143, 7, 7, 1) 50%, rgb(108, 4, 4) 90%);
-      color: var(--light-text-color);
-      border-radius: 5px;
-      margin: 10px;
-      padding: 10px 50px;
+    .contact-error-message {
+        background: rgb(143, 7, 7);
+        background: linear-gradient(209deg, rgba(143, 7, 7, 1) 50%, rgb(108, 4, 4) 90%);
+        color: var(--light-text-color);
+        border-radius: 5px;
+        margin: 10px;
+        padding: 10px 50px;
 
-      box-shadow: 0 0 50px -8px rgba(0, 0, 0, 0.75);
-      -webkit-box-shadow: 0 0 50px -8px rgba(0, 0, 0, 0.75);
-      -moz-box-shadow: 0 0 50px -8px rgba(0, 0, 0, 0.75);
-  }
+        box-shadow: 0 0 50px -8px rgba(0, 0, 0, 0.75);
+        -webkit-box-shadow: 0 0 50px -8px rgba(0, 0, 0, 0.75);
+        -moz-box-shadow: 0 0 50px -8px rgba(0, 0, 0, 0.75);
+    }
 
-  /*
-Loading Animation
-*/
+    /*
+	Loading Animation
+	*/
 
-  .lds-heart {
-      display: inline-block;
-      position: absolute;
-      width: 80px;
-      height: 80px;
-      transform: rotate(45deg);
-      transform-origin: 40px 40px;
-  }
+    .lds-heart {
+        z-index: 200;
+        display: inline-block;
+        position: absolute;
+        width: 80px;
+        height: 80px;
+        transform: rotate(45deg);
+        transform-origin: 40px 40px;
+    }
 
-  .lds-heart div {
-      top: 32px;
-      left: 32px;
-      position: absolute;
-      width: max(4vw, 8vh);
-      height: max(4vw, 8vh);
-      background: #fff;
-      animation: lds-heart 1.2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
-  }
+    .lds-heart div {
+        top: 24px;
+        left: 24px;
+        position: absolute;
+        width: max(2vw, 4vh);
+        height: max(2vw, 4vh);
+        background: #fff;
+        animation: lds-heart 1.2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+    }
 
-  .lds-heart div:after,
-  .lds-heart div:before {
-      content: " ";
-      position: absolute;
-      display: block;
-      width: max(4vw, 8vh);
-      height: max(4vw, 8vh);
-      background: #fff;
-  }
+    .lds-heart div:after,
+    .lds-heart div:before {
+        content: " ";
+        position: absolute;
+        display: block;
+        width: max(2vw, 4vh);
+        height: max(2vw, 4vh);
+        background: #fff;
+    }
 
-  .lds-heart div:before {
-      left: min(-2vw, -5vh);
-      border-radius: 50% 0 0 50%;
-  }
+    .lds-heart div:before {
+        left: min(-1vw, -2.5vh);
+        border-radius: 50% 0 0 50%;
+    }
 
-  .lds-heart div:after {
-      top: min(-2vw, -5vh);
-      border-radius: 50% 50% 0 0;
-  }
+    .lds-heart div:after {
+        top: min(-1vw, -2.5vh);
+        border-radius: 50% 50% 0 0;
+    }
 
-  @keyframes lds-heart {
-      0% {
-          transform: scale(0.95);
-      }
-      5% {
-          transform: scale(1.1);
-      }
-      39% {
-          transform: scale(0.85);
-      }
-      45% {
-          transform: scale(1);
-      }
-      60% {
-          transform: scale(0.95);
-      }
-      100% {
-          transform: scale(0.9);
-      }
-  }
+    @keyframes lds-heart {
+        0% {
+            transform: scale(0.95);
+        }
+        5% {
+            transform: scale(1.1);
+        }
+        39% {
+            transform: scale(0.85);
+        }
+        45% {
+            transform: scale(1);
+        }
+        60% {
+            transform: scale(0.95);
+        }
+        100% {
+            transform: scale(0.9);
+        }
+    }
 </style>
