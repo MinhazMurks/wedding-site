@@ -83,8 +83,8 @@
 			scrollTrigger: {
 				trigger: titleContainer,
 				start: "top 200",
-				end: "+=180% 200",
-				pinSpacing: false,
+				end: "+=100% 200",
+				markers: true,
 				pin: pageBodyContainer,
 				onEnter: () => activateScrollDialogue(false)
 			}
@@ -264,7 +264,7 @@
     }
 
 		.home-page-container {
-				height: 150vh;
+				height: 200vh;
 		}
 
 		.title {

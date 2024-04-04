@@ -2,6 +2,8 @@
 	import NavBar from '$lib/NavBar.svelte';
 	import './styles.css';
 	import { Svrollbar } from "svrollbar";
+	import ContactFooter from "$lib/ContactFooter.svelte";
+
 </script>
 
 
@@ -11,6 +13,7 @@
 				<slot />
 			<Svrollbar />
 		</main>
+	<ContactFooter/>
 </div>
 
 <style>
@@ -27,6 +30,7 @@
 
     main {
         margin-top: 10vh;
+				min-height: 100vh;
 				height: fit-content;
     }
 </style>

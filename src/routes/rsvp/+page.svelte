@@ -4,10 +4,12 @@
 	import js from "jquery";
 	import SegmentedButton from "$lib/SegmentedButton.svelte";
 	import { PUBLIC_WEDDING_SERVICE_HOST } from "$env/static/public";
-	import type { GetRsvpResponse } from "$lib/types/Responses";
 	import { gsap } from "gsap";
 	import { ScrollTrigger } from "gsap/ScrollTrigger";
 	import Lenis from "@studio-freight/lenis";
+	import type { GetRsvpResponse } from "$lib/types/Responses";
+	import { ErrorResponse } from "$lib/types/Responses";
+	import { InputType } from "$lib/types/Events";
 
 	let formContainerMask: HTMLElement;
 	let formContainer: HTMLElement;
@@ -37,17 +39,6 @@
 		return () => lenis.destroy();
 	});
 
-	enum InputType {
-		INSERT = "insertText",
-		INSERT_FROM_PASTE = "insertFromPaste",
-		DELETE_BACKWARD = "deleteContentBackward",
-		DELETE_FORWARD = "deleteContentForward",
-	}
-
-	class ErrorResponse extends Error {
-		messages?: string[];
-	}
-
 	const usNumberFormat = [2, 5];
 
 	let loading = false;
@@ -66,6 +57,8 @@
 
 	let plusOneEnabled = false;
 	let plusOneUsed = false;
+	
+	let plusOneFoodSelection = null;
 
 	let errorMessage: string | null = null;
 	let errorMessages: string[] | null = null;
@@ -81,8 +74,16 @@
 
 	function updateHeightManually(oldHeight: number) {
 		const timeline = gsap.timeline();
+		const formContainerTrueHeight =
+			formContainer.offsetHeight -
+			formContainer.style.marginTop.length -
+			formContainer.style.marginBottom.length;
 
-		if (oldHeight > formContainer.offsetHeight) {
+		console.log("oldHeight", oldHeight);
+		console.log("newHeight", formContainerTrueHeight);
+		console.log("newHeightFull", formContainer.offsetHeight);
+		const formContainerMaskTrueHeight = formContainerMask.offsetHeight - formContainerMask.style.paddingBottom.length - formContainerMask.style.paddingTop.length;
+		if (oldHeight > formContainerTrueHeight) {
 			timeline.set(
 				formContainer,
 				{
@@ -90,7 +91,9 @@
 				},
 			).to(formContainer,
 				{
-					height: formContainer.offsetHeight,
+					paddingTop: formContainer.style.paddingTop,
+					paddingBottom: formContainer.style.paddingBottom,
+					height: formContainerTrueHeight,
 				});
 		} else {
 			timeline.set(
@@ -100,11 +103,11 @@
 				},
 			).to(formContainerMask,
 				{
-					height: formContainer.offsetHeight + 20,
+					height: formContainerTrueHeight,
 				});
 		}
 
-	};
+	}
 
 	function getRsvp() {
 		loading = true;
@@ -270,9 +273,6 @@
 		lastName = inputEventTarget.value;
 	}
 
-	function validateEmail(event: Event) {
-	}
-
 	function validateNumberInput(event: Event) {
 		event.preventDefault();
 		const inputEventTarget = event.target as HTMLInputElement;
@@ -327,8 +327,27 @@
 		foodSelection = value;
 	}
 
-	function updatePlusOne(value: string): void {
-		plusOneUsed = Boolean(value);
+	function updatePlusOneFoodSelection(value: string): void {
+		plusOneFoodSelection = value;
+	}
+
+	async function updatePlusOne(value: string): Promise<void> {
+		const currentContainerMaskHeight =
+			formContainerMask.offsetHeight -
+			formContainerMask.style.paddingTop.length -
+			formContainerMask.style.paddingBottom.length -
+			formContainerMask.style.marginTop.length -
+			formContainerMask.style.marginBottom.length;
+
+		plusOneUsed = value == "true";
+		plusOneFoodSelection = value ? "CHICKEN" : null
+
+		await tick();
+		await tick();
+		await tick();
+		await tick();
+		await tick();
+		updateHeightManually(currentContainerMaskHeight);
 	}
 
 	function fullNameTitleCase(): string {
@@ -414,10 +433,9 @@
 						class="input-field"
 						type="email"
 						name="email"
-						placeholder="email"
+						placeholder="Email"
 						bind:value={email}
 						in:fade={{duration:600}}
-						on:change={e => validateEmail(e)}
 						required
 					/>
 					<input
@@ -476,18 +494,50 @@
 									segments={[
 										{
 											label: "Attending solo",
-											value: "true",
+											value: "false",
 											bound: null,
 										},
 										{
 											label: "Bringing a Guest",
-											value: "false",
+											value: "true",
 											bound: null,
 										}
 									]}
 								/>
 							</div>
 						</div>
+						{#if plusOneUsed}
+							<div class="food-section">
+								<h2>Make your guest's food selection</h2>
+								<div
+									class="food-selection"
+									in:fade={{duration:1000}}
+								>
+									<SegmentedButton
+										name="group"
+										defaultIndex={0}
+										callback={updatePlusOneFoodSelection}
+										segments={[
+											{
+												label: "Chicken",
+												value: "CHICKEN",
+												bound: null,
+											},
+											{
+												label: "Beef",
+												value: "BEEF",
+												bound: null,
+											},
+											{
+												label: "Fish",
+												value: "FISH",
+												bound: null,
+											}
+										]}
+									/>
+								</div>
+							</div>
+						{/if}
 					{/if}
 					<input id="wtf" class="submit-button" type="button" name="submit" value="Submit" on:click={submit}>
 				{:else if !retrieved}
