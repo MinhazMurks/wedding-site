@@ -6,6 +6,13 @@
 	import { base } from "$app/paths";
 	import { ChevronsDownIcon } from "svelte-feather-icons";
 
+	import { error } from '@sveltejs/kit';
+
+	/** @type {import('./$types').PageLoad} */
+	export function load(event) {
+		error(404, 'Not Found');
+	}
+
 	let header1: HTMLElement;
 	let header2: HTMLElement;
 
