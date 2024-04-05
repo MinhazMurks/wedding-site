@@ -228,8 +228,7 @@
 					You will find all information pertaining to the wedding here. To find out more about the venue and what's nearby, head to the <span style="padding: 0px" ><a style="padding: 0" href="{base}/places">Destination</a></span> tab.
 					If you want to check out the registry, head to the <span style="padding: 0px"><a href="{base}/registry">Registry</a></span> tab.
 					Want to RSVP? Head to the <span style="padding: 0px"><a href="{base}/rsvp">RSVP</a></span> tab.
-					If you have any questions, scroll down to the  <span class="link-span" style="padding: 0px" role="button" tabindex={4} on:click={scrollToBottom}>contact form</span> below to email us!
-					"
+					If you have any questions, scroll down to the  <span class="link-span" style="padding: 0px" role="button" tabindex={4} on:click={scrollToBottom}>Contact Form</span> below to email us!
 				</span>
 			</div>
 		</div>
@@ -273,7 +272,7 @@
     }
 
 		.home-page-container {
-				height: 200vh;
+				min-height: 200vh;
 		}
 
 		.title {
@@ -317,12 +316,6 @@
 				font-family: "Parisienne", cursive;
         font-size: min(5rem, 6vw);
 				align-self: center;
-		}
-
-		::selection {
-				background: #000000;
-				color: white;
-				z-index: -1;
 		}
 
 		.first-info-section {

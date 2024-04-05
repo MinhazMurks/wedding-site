@@ -38,12 +38,15 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        width: 100vw;
-        height: 10vh;
         background: rgb(0, 0, 0);
-        position: fixed;
         font-size: calc(10px + 2vmin);
-        z-index: 100;
+        z-index: 200;
+        position: fixed;
+        width: 100vw;
+
+        min-height: 50px;
+        height: 10vh;
+        max-height: 70px;
     }
 
     ul {
@@ -70,7 +73,7 @@
         align-items: center;
         color: var(--color-text);
         font-weight: 500;
-        font-size: 0.8rem;
+        font-size: min(0.8rem, 3vw);
         text-transform: uppercase;
         letter-spacing: 0.1em;
         text-decoration: none;
