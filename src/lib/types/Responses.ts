@@ -26,3 +26,7 @@ export enum PlaceCategory {
 	NIGHTLIFE = "NIGHTLIFE",
 	CAR_RENTAL = "CAR_RENTAL",
 }
+
+export class ErrorResponse extends Error {
+	messages?: string[];
+}

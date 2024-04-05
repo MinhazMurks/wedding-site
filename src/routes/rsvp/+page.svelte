@@ -1,20 +1,18 @@
 <script lang="ts">
 	import { onMount, tick } from "svelte";
 	import { fade } from "svelte/transition";
-	import js from "jquery";
 	import SegmentedButton from "$lib/SegmentedButton.svelte";
 	import { PUBLIC_WEDDING_SERVICE_HOST } from "$env/static/public";
-	import type { GetRsvpResponse } from "$lib/types/Responses";
 	import { gsap } from "gsap";
 	import { ScrollTrigger } from "gsap/ScrollTrigger";
 	import Lenis from "@studio-freight/lenis";
+	import type { GetRsvpResponse } from "$lib/types/Responses";
+	import { ErrorResponse } from "$lib/types/Responses";
+	import { InputType } from "$lib/types/Events";
 
-	let formContainerMask: HTMLElement;
 	let formContainer: HTMLElement;
 
 	onMount(() => {
-		window.js = js;
-
 		gsap.registerPlugin(ScrollTrigger);
 
 		const lenis = new Lenis({
@@ -37,17 +35,6 @@
 		return () => lenis.destroy();
 	});
 
-	enum InputType {
-		INSERT = "insertText",
-		INSERT_FROM_PASTE = "insertFromPaste",
-		DELETE_BACKWARD = "deleteContentBackward",
-		DELETE_FORWARD = "deleteContentForward",
-	}
-
-	class ErrorResponse extends Error {
-		messages?: string[];
-	}
-
 	const usNumberFormat = [2, 5];
 
 	let loading = false;
@@ -63,15 +50,16 @@
 	let phoneNumber = "";
 	let phoneNumberVisual = "";
 	let foodSelection = "CHICKEN";
-
 	let plusOneEnabled = false;
 	let plusOneUsed = false;
+	let plusOneFoodSelection: string | null = null;
+	let rsvpMessage = "";
 
 	let errorMessage: string | null = null;
 	let errorMessages: string[] | null = null;
 
 	function initAnims() {
-		gsap.from(formContainerMask, {
+		gsap.from(formContainer, {
 			opacity: 0,
 			y: 50,
 			ease: "power2.inOut",
@@ -81,30 +69,25 @@
 
 	function updateHeightManually(oldHeight: number) {
 		const timeline = gsap.timeline();
+		const formContainerTrueHeight =
+			formContainer.offsetHeight -
+			formContainer.style.paddingBottom.length -
+			formContainer.style.paddingTop.length;
 
-		if (oldHeight > formContainer.offsetHeight) {
-			timeline.set(
-				formContainer,
-				{
-					height: oldHeight,
-				},
-			).to(formContainer,
-				{
-					height: formContainer.offsetHeight,
-				});
-		} else {
-			timeline.set(
-				formContainerMask,
-				{
-					height: oldHeight,
-				},
-			).to(formContainerMask,
-				{
-					height: formContainer.offsetHeight + 20,
-				});
-		}
+		console.log("oldHeight", oldHeight);
+		console.log("newHeight", formContainerTrueHeight);
+		console.log("newHeightFull", formContainer.offsetHeight);
 
-	};
+		timeline.set(
+			formContainer,
+			{
+				height: oldHeight,
+			},
+		).to(formContainer,
+			{
+				height: "auto",
+			});
+	}
 
 	function getRsvp() {
 		loading = true;
@@ -128,7 +111,7 @@
 			.then(async data => {
 				data = data as GetRsvpResponse;
 
-				const currentContainerMaskHeight = formContainerMask.offsetHeight;
+				const currentContainerMaskHeight = formContainer.offsetHeight;
 
 				firstName = data.firstName;
 				lastName = data.lastName;
@@ -143,7 +126,7 @@
 				updateHeightManually(currentContainerMaskHeight);
 			})
 			.catch(async error => {
-				const currentContainerMaskHeight = formContainerMask.offsetHeight;
+				const currentContainerMaskHeight = formContainer.offsetHeight;
 
 				loading = false;
 				errorMessage = error.message;
@@ -177,7 +160,7 @@
 				return response.json();
 			})
 			.then(async () => {
-				const currentContainerMaskHeight = formContainerMask.offsetHeight;
+				const currentContainerMaskHeight = formContainer.offsetHeight;
 
 				loading = false;
 				declined = true;
@@ -187,7 +170,7 @@
 				updateHeightManually(currentContainerMaskHeight);
 			})
 			.catch(async error => {
-				const currentContainerMaskHeight = formContainerMask.offsetHeight;
+				const currentContainerMaskHeight = formContainer.offsetHeight;
 
 				loading = false;
 				errorMessage = error.message;
@@ -200,7 +183,7 @@
 	async function confirmAttendance() {
 		attending = true;
 
-		const currentContainerMaskHeight = formContainerMask.offsetHeight;
+		const currentContainerMaskHeight = formContainer.offsetHeight;
 		await tick();
 
 		updateHeightManually(currentContainerMaskHeight);
@@ -220,6 +203,8 @@
 				phoneNumber: phoneNumber,
 				foodSelection: foodSelection,
 				plusOneUsed: plusOneUsed,
+				plusOneFoodSelection: plusOneFoodSelection,
+				message: rsvpMessage,
 			}),
 		})
 			.then(async response => {
@@ -231,8 +216,7 @@
 				return response.json();
 			})
 			.then(async () => {
-
-				const currentContainerMaskHeight = formContainerMask.offsetHeight;
+				const currentContainerMaskHeight = formContainer.offsetHeight;
 
 				loading = false;
 				accepted = true;
@@ -243,7 +227,7 @@
 				updateHeightManually(currentContainerMaskHeight);
 			})
 			.catch(async error => {
-				const currentContainerMaskHeight = formContainerMask.offsetHeight;
+				const currentContainerMaskHeight = formContainer.offsetHeight;
 
 				loading = false;
 
@@ -268,9 +252,6 @@
 	function validateLastName(event: Event) {
 		let inputEventTarget = (event.target) as HTMLInputElement;
 		lastName = inputEventTarget.value;
-	}
-
-	function validateEmail(event: Event) {
 	}
 
 	function validateNumberInput(event: Event) {
@@ -327,8 +308,23 @@
 		foodSelection = value;
 	}
 
-	function updatePlusOne(value: string): void {
-		plusOneUsed = Boolean(value);
+	function updatePlusOneFoodSelection(value: string): void {
+		plusOneFoodSelection = value;
+	}
+
+	async function updatePlusOne(value: string): Promise<void> {
+		const currentContainerMaskHeight =
+			formContainer.offsetHeight -
+			formContainer.style.paddingTop.length -
+			formContainer.style.paddingBottom.length -
+			formContainer.style.marginTop.length -
+			formContainer.style.marginBottom.length;
+
+		plusOneUsed = value == "true";
+		plusOneFoodSelection = value ? "CHICKEN" : null;
+
+		await tick();
+		updateHeightManually(currentContainerMaskHeight);
 	}
 
 	function fullNameTitleCase(): string {
@@ -348,100 +344,98 @@
 </script>
 
 <div class="rsvp-page-container">
-	<div bind:this={formContainerMask} id="form-container-mask" class="form-container-mask">
-		<div id="form-container" class="form-container" class:loading bind:this={formContainer}>
-			{#if loading}
-				<div transition:fade={{duration: 100}} class="lds-heart">
-					<div></div>
+	<div id="form-container" class="form-container" class:loading bind:this={formContainer}>
+		{#if loading}
+			<div transition:fade={{duration: 100}} class="lds-heart">
+				<div></div>
+			</div>
+		{/if}
+		<h1>RSVP</h1>
+		<form class="form-fields" on:submit={submit}>
+			{#if (attending || !retrieved) && !accepted}
+				<input
+					class="input-field"
+					type="text"
+					name="firstName"
+					placeholder="First Name"
+					in:fade={{duration:200}}
+					bind:value={firstName}
+					on:input={e => validateFirstName(e)}
+					required
+				/>
+				<input
+					class="input-field"
+					type="text"
+					name="lastName"
+					placeholder="Last Name"
+					in:fade={{duration:400}}
+					bind:value={lastName}
+					on:input={e => validateLastName(e)}
+					required
+				/>
+			{/if}
+
+			{#if retrieved && !declined && !attending && !accepted}
+				<h2 in:fade>Will you be able to accept?</h2>
+				<div in:fade class="attending-dialogue">
+					<button
+						class="submit-button rsvp-response response"
+						type="button"
+						on:click={confirmAttendance}
+					>
+						<span class="name">{fullNameTitleCase()}</span>
+						<span class="status">Joyfully Accepts</span>
+					</button>
+
+					<button
+						class="submit-button rsvp-response negative"
+						type="button"
+						on:click={sendDecline}
+					>
+						<span class="name">{fullNameTitleCase()}</span>
+						<span class="status">Regretfully Declines</span>
+					</button>
 				</div>
 			{/if}
-			<h1>RSVP</h1>
-			<form class="form-fields">
-				{#if (attending || !retrieved) && !accepted}
-					<input
-						class="input-field"
-						type="text"
-						name="firstName"
-						placeholder="First Name"
-						in:fade={{duration:200}}
-						bind:value={firstName}
-						on:input={e => validateFirstName(e)}
-						required
-					/>
-					<input
-						class="input-field"
-						type="text"
-						name="lastName"
-						placeholder="Last Name"
-						in:fade={{duration:400}}
-						bind:value={lastName}
-						on:input={e => validateLastName(e)}
-						required
-					/>
-				{/if}
 
-				{#if retrieved && !declined && !attending && !accepted}
-					<h2 in:fade>Will you be able to accept?</h2>
-					<div in:fade class="attending-dialogue">
-						<button
-							class="submit-button rsvp-response response"
-							type="button"
-							on:click={confirmAttendance}
-						>
-							<span class="name">{fullNameTitleCase()}</span>
-							<span class="status">Joyfully Accepts</span>
-						</button>
+			{#if declined || accepted}
+				<div class="declined-dialogue">
+					<h2 in:fade={{duration: 200}}>Thank you, your RSVP has been submitted successfully!</h2>
+				</div>
+			{/if}
 
-						<button
-							class="submit-button rsvp-response negative"
-							type="button"
-							on:click={sendDecline}
-						>
-							<span class="name">{fullNameTitleCase()}</span>
-							<span class="status">Regretfully Declines</span>
-						</button>
-					</div>
-				{/if}
-
-				{#if declined || accepted}
-					<div class="declined-dialogue">
-						<h2 in:fade={{duration: 200}}>Thank you, your RSVP has been submitted successfully!</h2>
-					</div>
-				{/if}
-
-				{#if attending && !accepted}
-					<input
-						class="input-field"
-						type="email"
-						name="email"
-						placeholder="email"
-						bind:value={email}
-						in:fade={{duration:600}}
-						on:change={e => validateEmail(e)}
-						required
-					/>
-					<input
-						class="input-field"
-						type="text"
-						name="phoneNumber"
-						placeholder="Phone Number"
-						value={phoneNumberVisual}
-						in:fade={{duration:800}}
-						on:input={e => validateNumberInput(e)}
-						on:paste={e => validatePhoneNumberPasteInput(e)}
-						required
-					/>
-					<div class="food-section">
-						<h2>Make your food selection</h2>
-						<div
-							class="food-selection"
-							in:fade={{duration:1000}}
-						>
-							<SegmentedButton
-								name="group"
-								defaultIndex={0}
-								callback={updateFoodSelection}
-								segments={[
+			{#if attending && !accepted}
+				<input
+					class="input-field"
+					type="email"
+					name="email"
+					placeholder="Email"
+					bind:value={email}
+					in:fade={{duration:600}}
+					required
+				/>
+				<input
+					class="input-field"
+					type="text"
+					name="phoneNumber"
+					placeholder="Phone Number"
+					value={phoneNumberVisual}
+					in:fade={{duration:800}}
+					on:input={e => validateNumberInput(e)}
+					on:paste={e => validatePhoneNumberPasteInput(e)}
+					required
+				/>
+				<div class="food-section">
+					<h2>Make your food selection</h2>
+					<div
+						class="food-selection"
+						in:fade={{duration:1000}}
+					>
+						<SegmentedButton
+							name="group"
+							defaultIndex={0}
+							callback={updateFoodSelection}
+							segments={[
 							{
 								label: "Chicken",
 								value: "CHICKEN",
@@ -458,52 +452,91 @@
 								bound: null,
 							}
 						]}
+						/>
+					</div>
+				</div>
+				{#if plusOneEnabled}
+					<div class="food-section">
+						<h2>Will you be attending alone?</h2>
+						<div
+							class="food-selection"
+							in:fade={{duration:1000}}
+						>
+							<SegmentedButton
+								name="plus-one"
+								defaultIndex={0}
+								callback={updatePlusOne}
+								segments={[
+										{
+											label: "Attending solo",
+											value: "false",
+											bound: null,
+										},
+										{
+											label: "Bringing a Guest",
+											value: "true",
+											bound: null,
+										}
+									]}
 							/>
 						</div>
 					</div>
-
-					{#if plusOneEnabled}
+					{#if plusOneUsed}
 						<div class="food-section">
-							<h2>Will you be attending alone?</h2>
+							<h2>Make your guest's food selection</h2>
 							<div
 								class="food-selection"
 								in:fade={{duration:1000}}
 							>
 								<SegmentedButton
-									name="plus-one"
+									name="guest-food-selection"
 									defaultIndex={0}
-									callback={updatePlusOne}
+									callback={updatePlusOneFoodSelection}
 									segments={[
-										{
-											label: "Attending solo",
-											value: "true",
-											bound: null,
-										},
-										{
-											label: "Bringing a Guest",
-											value: "false",
-											bound: null,
-										}
-									]}
+											{
+												label: "Chicken",
+												value: "CHICKEN",
+												bound: null,
+											},
+											{
+												label: "Beef",
+												value: "BEEF",
+												bound: null,
+											},
+											{
+												label: "Fish",
+												value: "FISH",
+												bound: null,
+											}
+										]}
 								/>
 							</div>
 						</div>
 					{/if}
-					<input id="wtf" class="submit-button" type="button" name="submit" value="Submit" on:click={submit}>
-				{:else if !retrieved}
-					<input id="find-invitation-button" class="submit-button" type="button" on:click={getRsvp} name="submit"
-								 value="Find Invitation">
 				{/if}
+				<div class="text-box-container">
+						<textarea
+							class="input-field text-box"
+							name="rsvp-message"
+							placeholder="Any information you want us to know"
+							in:fade={{duration:800}}
+							bind:value={rsvpMessage}
+						/>
+				</div>
+				<input id="wtf" class="submit-button" type="submit" name="submit" value="Submit">
+			{:else if !retrieved}
+				<input id="find-invitation-button" class="submit-button" type="button" on:click={getRsvp} name="submit"
+							 value="Find Invitation">
+			{/if}
 
-				{#if errorMessage}
-					<div in:fade class="error-message">{errorMessage}</div>
-				{:else if errorMessages}
-					{#each errorMessages as message}
-						<div in:fade class="error-message">{message}</div>
-					{/each}
-				{/if}
-			</form>
-		</div>
+			{#if errorMessage}
+				<div in:fade class="error-message">{errorMessage}</div>
+			{:else if errorMessages}
+				{#each errorMessages as message}
+					<div in:fade class="error-message">{message}</div>
+				{/each}
+			{/if}
+		</form>
 	</div>
 </div>
 
@@ -531,17 +564,8 @@
         margin-bottom: 2rem;
     }
 
-    .form-container-mask {
-        margin: 10px;
-        width: 100%;
-        align-self: center;
-        display: flex;
-        justify-content: center;
-        overflow: hidden;
-        transition: height 800ms ease;
-    }
-
     .form-container {
+        margin: 10px;
         padding: 20px;
         display: flex;
         flex-direction: column;
@@ -552,6 +576,9 @@
         width: max(40%, 500px);
         max-width: 600px;
         height: fit-content;
+
+
+        overflow: hidden;
 
         --input-height: 3em;
     }
@@ -594,6 +621,21 @@
         color: black;
         border: none;
         outline: none;
+    }
+
+    .text-box-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    .text-box {
+        font-family: Jost, serif;
+        font-size: var(--font-size);
+        width: 85%;
+        height: 100%;
     }
 
     .form-fields {
