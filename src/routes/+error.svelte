@@ -5,12 +5,10 @@
 </script>
 
 <div class="error-page-container">
-	<h1 class="text-8xl">{$page.status}</h1>
-	<p class="text-2xl">{error.message}</p>
+	<h1>{$page.status}</h1>
+	<p>{error.message}</p>
 	{#if $page.status === 404}
-		<p class=" text-red-400 mt-12">How did you even get here?</p>
-		<p class="mt-3">
-		</p>
+		<p>How did you even get here?</p>
 	{/if}
 </div>
 
