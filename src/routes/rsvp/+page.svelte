@@ -80,57 +80,69 @@
 			});
 	}
 
-	function getRsvp() {
-		loading = true;
-		fetch(`${PUBLIC_WEDDING_SERVICE_HOST}/api/v1/invitation?` + new URLSearchParams({
-			firstName: firstName,
-			lastName: lastName,
-		}), {
-			method: "GET",
-			headers: {
-				"Content-Type": "application/json",
-			},
-		})
-			.then(async response => {
-				if (response.status >= 500) {
-					throw new Error("Something went wrong");
-				} else if (response.status >= 400) {
-					throw await response.json() as never as ErrorResponse;
-				}
-				return response.json();
+	async function getRsvp() {
+		if (email) {
+			loading = true;
+			fetch(`${PUBLIC_WEDDING_SERVICE_HOST}/api/v1/invitation?` + new URLSearchParams({
+				firstName: firstName,
+				lastName: lastName,
+			}), {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+				},
 			})
-			.then(async data => {
-				data = data as GetRsvpResponse;
+				.then(async response => {
+					if (response.status >= 500) {
+						throw new Error("Something went wrong");
+					} else if (response.status >= 400) {
+						throw await response.json() as never as ErrorResponse;
+					}
+					return response.json();
+				})
+				.then(async data => {
+					data = data as GetRsvpResponse;
 
-				const currentContainerMaskHeight = formContainer.offsetHeight;
+					const currentContainerMaskHeight = formContainer.offsetHeight;
 
-				firstName = data.firstName;
-				lastName = data.lastName;
-				plusOneEnabled = data.plusOneEnabled;
+					firstName = data.firstName;
+					lastName = data.lastName;
+					plusOneEnabled = data.plusOneEnabled;
 
-				loading = false;
-				retrieved = true;
-				errorMessage = null;
-				errorMessages = null;
+					loading = false;
+					retrieved = true;
+					errorMessage = null;
+					errorMessages = null;
 
-				await tick();
-				updateHeightManually(currentContainerMaskHeight);
-			})
-			.catch(async error => {
-				const currentContainerMaskHeight = formContainer.offsetHeight;
+					await tick();
+					updateHeightManually(currentContainerMaskHeight);
+				})
+				.catch(async error => {
+					const currentContainerMaskHeight = formContainer.offsetHeight;
 
-				loading = false;
-				errorMessage = error.message;
+					loading = false;
+					errorMessage = error.message;
 
-				await tick();
-				updateHeightManually(currentContainerMaskHeight);
-			});
+					await tick();
+					updateHeightManually(currentContainerMaskHeight);
+				});
+		} else {
+			const currentContainerMaskHeight =
+				formContainer.offsetHeight -
+				formContainer.style.marginTop.length -
+				formContainer.style.marginBottom.length;
+
+			errorMessage = "Email is required";
+
+			await tick();
+			updateHeightManually(currentContainerMaskHeight);
+		}
 	}
 
 	function sendDecline() {
 		loading = true;
 
-		fetch(`${PUBLIC_WEDDING_SERVICE_HOST}/api/v1/invitation/rsvp?`, {
+		fetch(`${PUBLIC_WEDDING_SERVICE_HOST}/api/v1/invitation/rsvp/decline?`, {
 			method: "PUT",
 			headers: {
 				"Content-Type": "application/json",
@@ -139,6 +151,7 @@
 				attending: false,
 				firstName: firstName,
 				lastName: lastName,
+				email: email,
 			}),
 		})
 			.then(async response => {
@@ -181,7 +194,7 @@
 	}
 
 	function submit() {
-		fetch(`${PUBLIC_WEDDING_SERVICE_HOST}/api/v1/invitation/rsvp?`, {
+		fetch(`${PUBLIC_WEDDING_SERVICE_HOST}/api/v1/invitation/rsvp/accept?`, {
 			method: "PUT",
 			headers: {
 				"Content-Type": "application/json",
@@ -364,6 +377,15 @@
 					on:input={e => validateLastName(e)}
 					required
 				/>
+				<input
+					class="input-field"
+					type="email"
+					name="email"
+					placeholder="Email"
+					bind:value={email}
+					in:fade={{duration:600}}
+					required
+				/>
 			{/if}
 
 			{#if retrieved && !declined && !attending && !accepted}
@@ -396,15 +418,6 @@
 			{/if}
 
 			{#if attending && !accepted}
-				<input
-					class="input-field"
-					type="email"
-					name="email"
-					placeholder="Email"
-					bind:value={email}
-					in:fade={{duration:600}}
-					required
-				/>
 				<input
 					class="input-field"
 					type="text"

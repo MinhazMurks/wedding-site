@@ -5,6 +5,9 @@
 	import ContactFooter from "$lib/ContactFooter.svelte";
 	import { onMount } from "svelte";
 
+
+	import { page } from "$app/stores";
+
 	let navBarContainer: HTMLElement;
 	let mainContainer: HTMLElement;
 
@@ -23,9 +26,20 @@
 		<NavBar />
 	</div>
 	<main bind:this={mainContainer}>
-		<slot />
+		{#if $page?.error}
+			<div class="error-container">
+				<h1>{$page.status}</h1>
+				<p class="status">{$page.error.message}</p>
+				{#if $page.status === 404}
+					<p>How did you even get here?</p>
+				{/if}
+			</div>
+		{:else}
+			<slot />
+		{/if}
 		<Svrollbar />
 	</main>
+
 	<ContactFooter />
 </div>
 
@@ -45,5 +59,26 @@
         margin-top: 10vh;
         min-height: 100vh;
         height: fit-content;
+    }
+
+    .error-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .error-container h1 {
+        font-size: 8rem;
+        margin-bottom: 20px;
+    }
+
+    .error-container p {
+        font-size: 1.5rem;
+        margin: 0;
+    }
+
+    .status {
+        font-weight: bold;
+        font-style: italic;
     }
 </style>

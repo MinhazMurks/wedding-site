@@ -10,8 +10,8 @@
 			<li aria-current={$page.url.pathname === '/' ? 'page' : undefined}>
 				<a href="{base}/">Home</a>
 			</li>
-			<li aria-current={$page.url.pathname === '/places' ? 'page' : undefined}>
-				<a href="{base}/places">Destination</a>
+			<li aria-current={$page.url.pathname === '/destination' ? 'page' : undefined}>
+				<a href="{base}/destination">Destination</a>
 			</li>
 			<li aria-current={$page.url.pathname === '/registry' ? 'page' : undefined}>
 				<a href="{base}/registry">Registry</a>
