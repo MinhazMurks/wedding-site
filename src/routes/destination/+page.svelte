@@ -228,6 +228,11 @@
 	</div>
 </div>
 
+<svelte:head>
+	<title>Destination</title>
+	<meta name="description" content="Explore the area" />
+</svelte:head>
+
 <style>
     @font-face {
         font-family: 'Gnomon';

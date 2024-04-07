@@ -5,7 +5,6 @@
 	import ContactFooter from "$lib/ContactFooter.svelte";
 	import { onMount } from "svelte";
 
-
 	import { page } from "$app/stores";
 
 	let navBarContainer: HTMLElement;

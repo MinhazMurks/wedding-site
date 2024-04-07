@@ -347,6 +347,11 @@
 	}
 </script>
 
+<svelte:head>
+	<title>RSVP</title>
+	<meta name="description" content="Respond to your invitation" />
+</svelte:head>
+
 <div class="rsvp-page-container">
 	<div id="form-container" class="form-container" class:loading bind:this={formContainer}>
 		{#if loading}

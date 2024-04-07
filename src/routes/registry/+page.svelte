@@ -70,6 +70,11 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Registry</title>
+	<meta name="description" content="Jennie and Minhaz's Registry" />
+</svelte:head>
+
 <div class="registry-container" bind:this={registryTitle}>
 	<h1>
 		Our Registry

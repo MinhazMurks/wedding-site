@@ -50,6 +50,11 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Itinerary</title>
+	<meta name="description" content="Jennie and Minhaz's Itinerary" />
+</svelte:head>
+
 <div class="itinerary-page">
 	<div class="itinerary-body">
 		<h1 bind:this={title}>Itinerary</h1>
