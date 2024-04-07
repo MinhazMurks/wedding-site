@@ -92,13 +92,13 @@
 				trigger: titleContainer,
 				start: "top 200",
 				end: "+=100% 200",
-				pin: pageBodyContainer,
 				onEnter: () => activateScrollDialogue(false)
 			}
 		});
 
-		titleAnimation.set(jennieNameContainer,
+		gsap.set(jennieNameContainer,
 			{
+				opacity: 0,
 				x: -1 * window.outerWidth,
 				y: -40
 			}
@@ -129,9 +129,16 @@
 			}
 		);
 
+		titleAnimation.set(jennieNameContainer,
+			{
+				opacity: 1
+			}
+		)
+
 		for (let i = jennieNameContainer.children.length - 1; i >= 0; i--) {
 			titleAnimation.to(jennieNameContainer.children.item(i),
 				{
+					opacity: 1,
 					x: window.outerWidth,
 					duration: .1
 				},
@@ -139,6 +146,7 @@
 
 			titleAnimation.to(jennieNameContainer.children.item(i),
 				{
+					opacity: 1,
 					y: 40,
 					ease: "bounce.out",
 					duration: .1
@@ -279,7 +287,7 @@
     }
 
 		.home-page-container {
-				min-height: 200vh;
+				min-height: 100vh;
 		}
 
 		.title {

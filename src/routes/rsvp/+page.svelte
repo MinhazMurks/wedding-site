@@ -69,15 +69,6 @@
 
 	function updateHeightManually(oldHeight: number) {
 		const timeline = gsap.timeline();
-		const formContainerTrueHeight =
-			formContainer.offsetHeight -
-			formContainer.style.paddingBottom.length -
-			formContainer.style.paddingTop.length;
-
-		console.log("oldHeight", oldHeight);
-		console.log("newHeight", formContainerTrueHeight);
-		console.log("newHeightFull", formContainer.offsetHeight);
-
 		timeline.set(
 			formContainer,
 			{
@@ -91,7 +82,7 @@
 
 	function getRsvp() {
 		loading = true;
-		fetch(`${PUBLIC_WEDDING_SERVICE_HOST}/api/v1/rsvp?` + new URLSearchParams({
+		fetch(`${PUBLIC_WEDDING_SERVICE_HOST}/api/v1/invitation?` + new URLSearchParams({
 			firstName: firstName,
 			lastName: lastName,
 		}), {
@@ -139,7 +130,7 @@
 	function sendDecline() {
 		loading = true;
 
-		fetch(`${PUBLIC_WEDDING_SERVICE_HOST}/api/v1/rsvp?`, {
+		fetch(`${PUBLIC_WEDDING_SERVICE_HOST}/api/v1/invitation/rsvp?`, {
 			method: "PUT",
 			headers: {
 				"Content-Type": "application/json",
@@ -190,7 +181,7 @@
 	}
 
 	function submit() {
-		fetch(`${PUBLIC_WEDDING_SERVICE_HOST}/api/v1/rsvp?`, {
+		fetch(`${PUBLIC_WEDDING_SERVICE_HOST}/api/v1/invitation/rsvp?`, {
 			method: "PUT",
 			headers: {
 				"Content-Type": "application/json",
