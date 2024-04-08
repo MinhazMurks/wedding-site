@@ -116,8 +116,7 @@
 				}
 				places = places;
 			})
-			.catch(async error => {
-				console.log(error.message);
+			.catch(async () => {
 			});
 	};
 

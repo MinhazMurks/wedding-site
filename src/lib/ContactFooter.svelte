@@ -42,8 +42,6 @@
 				if (response.status >= 500) {
 					throw new Error("Something went wrong");
 				} else if (response.status >= 400) {
-					console.log("Herrr");
-					console.log(response);
 					throw await response.json() as never as ErrorResponse;
 				}
 				return response.json();

@@ -121,7 +121,12 @@
 					const currentContainerMaskHeight = formContainer.offsetHeight;
 
 					loading = false;
-					errorMessage = error.message;
+					if (error.message?.toLowerCase() == "failed to fetch") {
+						errorMessage = "Could not connect. Please try again later.";
+					} else {
+						errorMessage = error.message;
+					}
+
 
 					await tick();
 					updateHeightManually(currentContainerMaskHeight);
@@ -237,10 +242,8 @@
 
 				if (error.message) {
 					errorMessage = error.message;
-					console.log(error.message);
 				} else if (error.messages) {
 					errorMessages = error.messages;
-					console.log(error.messages);
 				}
 
 				await tick();
@@ -417,8 +420,10 @@
 			{/if}
 
 			{#if declined || accepted}
-				<div class="declined-dialogue">
+				<div class="submitted-dialogue">
 					<h2 in:fade={{duration: 200}}>Thank you, your RSVP has been submitted successfully!</h2>
+					<p in:fade={{duration: 200, delay: 100}}>You will receive a confirmation email shortly please check your trash
+						and spam folder as well!</p>
 				</div>
 			{/if}
 
@@ -567,7 +572,7 @@
     }
 
     h2 {
-        font-size: max(1.5vw, 2vh);
+        font-size: max(1.5vw, 3vh);
         color: var(--light-text-color);
         margin-top: 2rem;
         margin-bottom: 2rem;
@@ -605,11 +610,23 @@
         column-gap: 10px;
     }
 
-    .declined-dialogue {
+    .submitted-dialogue {
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
         text-align: center;
+    }
+
+    .submitted-dialogue h2 {
+        margin-bottom: 0;
+    }
+
+    .submitted-dialogue p {
+        font-size: max(.8vw, 1.5vh);
+        margin-top: 10px;
+        margin-bottom: 0;
+        padding: 20px;
     }
 
     .input-field {

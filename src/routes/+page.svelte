@@ -6,8 +6,6 @@
 	import { base } from "$app/paths";
 	import { ChevronsDownIcon } from "svelte-feather-icons";
 
-	import { error } from '@sveltejs/kit';
-
 
 	let header1: HTMLElement;
 	let header2: HTMLElement;
@@ -178,7 +176,6 @@
 	}
 
 	function scrollToBottom() {
-		console.log("clicked")
 		window.scrollTo({ left: 0, top: document.body.scrollHeight, behavior: "smooth" });
 	}
 </script>
@@ -297,7 +294,6 @@
     }
 
     .page-body-container {
-        margin-top: 10vh;
         display: flex;
         flex-direction: column;
         justify-content: center;

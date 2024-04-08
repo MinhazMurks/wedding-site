@@ -55,7 +55,6 @@
     }
 
     main {
-        margin-top: 10vh;
         min-height: 100vh;
         height: fit-content;
     }
