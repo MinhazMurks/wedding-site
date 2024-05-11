@@ -157,7 +157,7 @@
 	<div class="main-body-container" bind:this={mainBodyContainer}>
 		<span>We have chosen The Black Barn for our wedding venue. The Black Barn is a beautiful rustic but modern venue.
 			Located away from the main Orlando area, it boasts 5 acres of agricultural land. The Black Barn has both beautiful
-			greenery and modern architecture allowing us to enjoy the best of both worlds.</span>
+			greenery and modern architecture allowing us to enjoy the best of both worlds!</span>
 	</div>
 	<div class="places-title-container" bind:this={nearbyTitleContainer}>
 		<h1>Nearby</h1>
